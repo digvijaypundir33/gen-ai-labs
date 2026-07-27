@@ -1,0 +1,14 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Lambda build artifacts (regenerate from source with `zip function.zip lambda_function.py`)
+*.zip
+
+# Leftover AWS CLI outfile artifacts
+response.json
+hosted-config-version-response.json

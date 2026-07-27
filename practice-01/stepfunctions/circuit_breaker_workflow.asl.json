@@ -1,0 +1,126 @@
+{
+  "Comment": "Resilient model invocation: circuit breaker check, primary/fallback attempts, graceful degradation",
+  "StartAt": "CheckPrimaryBreaker",
+  "States": {
+    "CheckPrimaryBreaker": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "ai-assistant-circuit-breaker",
+        "Payload": {
+          "breaker_id": "primary",
+          "action": "check"
+        }
+      },
+      "ResultSelector": {
+        "allow.$": "$.Payload.allow"
+      },
+      "ResultPath": "$.breakerCheck",
+      "Next": "IsPrimaryAllowed"
+    },
+    "IsPrimaryAllowed": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.breakerCheck.allow",
+          "BooleanEquals": true,
+          "Next": "TryPrimaryModel"
+        }
+      ],
+      "Default": "TryFallbackModel"
+    },
+    "TryPrimaryModel": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "ai-assistant-model-abstraction",
+        "Payload": {
+          "prompt.$": "$.prompt",
+          "use_case.$": "$.use_case",
+          "attempt": "primary"
+        }
+      },
+      "ResultSelector": {
+        "body.$": "States.StringToJson($.Payload.body)"
+      },
+      "ResultPath": "$.result",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "RecordPrimaryFailure"
+        }
+      ],
+      "Next": "RecordPrimarySuccess"
+    },
+    "RecordPrimarySuccess": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "ai-assistant-circuit-breaker",
+        "Payload": {
+          "breaker_id": "primary",
+          "action": "record_success"
+        }
+      },
+      "ResultPath": null,
+      "Next": "Success"
+    },
+    "RecordPrimaryFailure": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "ai-assistant-circuit-breaker",
+        "Payload": {
+          "breaker_id": "primary",
+          "action": "record_failure"
+        }
+      },
+      "ResultPath": null,
+      "Next": "TryFallbackModel"
+    },
+    "TryFallbackModel": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "ai-assistant-model-abstraction",
+        "Payload": {
+          "prompt.$": "$.prompt",
+          "use_case.$": "$.use_case",
+          "attempt": "fallback"
+        }
+      },
+      "ResultSelector": {
+        "body.$": "States.StringToJson($.Payload.body)"
+      },
+      "ResultPath": "$.result",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "GracefulDegradation"
+        }
+      ],
+      "Next": "Success"
+    },
+    "GracefulDegradation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "ai-assistant-graceful-degradation",
+        "Payload": {
+          "prompt.$": "$.prompt",
+          "use_case.$": "$.use_case"
+        }
+      },
+      "ResultSelector": {
+        "body.$": "States.StringToJson($.Payload.body)"
+      },
+      "ResultPath": "$.result",
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

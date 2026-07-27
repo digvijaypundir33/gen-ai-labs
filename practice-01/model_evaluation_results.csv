@@ -1,0 +1,282 @@
+model_id,question,output,latency,input_tokens,output_tokens,cost_usd,similarity_score,error
+amazon.nova-micro-v1:0,What is a 401(k) retirement plan?,"A 401(k) retirement plan is a tax-advantaged retirement savings plan offered by many employers in the United States. Here are the key features:
+
+1. **Contributions**:
+   - Employees can contribute a portion of their paycheck before taxes are taken out.
+   - Employers may also offer matching contributions, which can significantly boost savings.
+
+2. **Tax Benefits**:
+   - Contributions reduce taxable income, effectively lowering the employee's tax burden in the year of contribution.
+   - Growth within the 401(k) is tax-deferred, meaning no taxes are paid on earnings until withdrawals are made during retirement.
+
+3. **Investment Options**:
+   - Participants can choose from a variety of investment options, typically mutual funds or ETFs.
+   - The level of risk and return varies with different investment choices.
+
+4. **Withdrawals**:
+   - Typically, withdrawals are taxed as ordinary income and may incur penalties if taken before age 59½, except in certain circumstances like financial hardship or certain medical expenses.
+
+5. **Required Minimum Distributions (RMDs)**:
+   - Starting at age 73 (as of the SECURE Act 2.0), individuals must begin taking required minimum distributions from their 401(k) accounts.
+
+6. **Portability**:
+   - Upon leaving a job, employees can roll over their 401(k) balance to an IRA or another employer's 401(k) plan.
+
+7. **Benefits**:
+   - Helps individuals save for retirement in a tax-advantaged way.
+   - Can include employer matching, which can enhance savings potential.",2.333232879638672,13.0,346.0,4.889499999999999e-05,0.6666666666666666,
+amazon.nova-lite-v1:0,What is a 401(k) retirement plan?,"A 401(k) retirement plan is a type of employer-sponsored retirement savings plan in the United States. It allows employees to save and invest a portion of their paycheck before taxes are deducted. Contributions are made from the employee's salary, and employers may also contribute on behalf of their employees.
+
+Key Features of a 401(k) Plan:
+
+1. **Contributions**:
+   - **Employee Contributions**: Employees can contribute a percentage of their salary, up to certain limits set by the Internal Revenue Service (IRS).
+   - **Employer Contributions**: Some employers match a portion of the employee's contributions or make additional contributions regardless of employee contributions.
+
+2. **Tax Benefits**:
+   - **Pre-Tax Contributions**: Contributions are made with pre-tax dollars, reducing taxable income for the year they are made.
+   - **Tax-Deferred Growth**: Investment earnings grow tax-deferred until withdrawn.
+
+3. **Investment Options**:
+   - Participants can choose from a range of investment options, such as mutual funds, stocks, bonds, and exchange-traded funds (ETFs).
+
+4. **Withdrawals**:
+   - **Age 59½**: Generally, withdrawals can be made without penalty at age 59½.
+   - **Early Withdrawals**: Withdrawals before age 59½ may incur a 10% penalty tax, in addition to regular income taxes.
+   - **Required Minimum Distributions (RMDs)**: Starting at age 73, participants must begin taking distributions from their 401(k) accounts.
+
+5. **Loans**:
+   - Participants may be allowed to take loans from their 401(k) accounts, typically up to 50% of the account balance or $50,000, whichever is less. These loans must be repaid with interest.
+
+6. **Rollovers**:
+   - Participants can roll over their 401(k) assets to another 401(k) or an IRA if they change jobs or want to consolidate their retirement accounts.
+
+Annual Contribution Limits:
+- For 2024, the contribution limit for employees is $22,500, with an additional $7,500 catch-up contribution allowed for those aged 50 and over.
+
+A 401(k) plan is a powerful tool for long-term retirement savings, offering",3.8292689323425293,13.0,500.0,0.00012078,0.6666666666666666,
+us.anthropic.claude-haiku-4-5-20251001-v1:0,What is a 401(k) retirement plan?,,0.46079397201538086,,,,,"An error occurred (AccessDeniedException) when calling the Converse operation: Model access is denied due to INVALID_PAYMENT_INSTRUMENT:A valid payment instrument must be provided.. Your AWS Marketplace subscription for this model cannot be completed at this time. If you recently fixed this issue, try again after 2 minutes."
+amazon.nova-micro-v1:0,How does compound interest work?,"Compound interest is a method of calculating interest where the interest earned on an initial principal amount is added to the principal, and future interest calculations are based on this new total. Here’s how it works:
+
+1. **Principal**: This is the initial amount of money you invest or borrow. 
+
+2. **Interest Rate**: This is the percentage rate at which interest is applied to the principal. It can be expressed as an annual, semi-annual, quarterly, monthly, or daily rate.
+
+3. **Compounding Period**: This refers to the frequency at which the interest is calculated and added to the principal. Common compounding periods are annually, semi-annually, quarterly, monthly, and daily.
+
+4. **Formula**: The formula for compound interest is:
+   \[
+   A = P \left(1 + \frac{r}{n}\right)^{nt}
+   \]
+   where:
+   - \( A \) is the amount of money accumulated after n years, including interest.
+   - \( P \) is the principal amount (the initial amount of money).
+   - \( r \) is the annual interest rate (decimal).
+   - \( n \) is the number of times that interest is compounded per year.
+   - \( t \) is the time the money is invested or borrowed for, in years.
+
+5. **Example**: Suppose you invest $1,000 at an annual interest rate of 5% compounded annually for 10 years.
+   - \( P = 1000 \)
+   - \( r = 0.05 \)
+   - \( n = 1 \) (compounded annually)
+   - \( t = 10 \)
+
+   Plugging these into the formula:
+   \[
+   A = 1000 \left(1 + \frac{0.05}{1}\right)^{1 \times 10} = 1000 \left(1.05\right)^{10} \approx 1628.89
+   \]
+
+   After 10 years, the amount would be approximately $1,628.89.
+
+**Key Points**:
+- **Compounding More Frequently**: The more frequently interest is compounded (e.g., monthly, daily), the more interest you will earn over the same period.
+- **Power of Compounding**: Compound interest can significantly increase the",1.8380320072174072,6.0,500.0,7.021e-05,0.6,
+amazon.nova-lite-v1:0,How does compound interest work?,"Compound interest is the interest on a loan or deposit that is calculated based on both the initial principal and the accumulated interest from previous periods. Here's how it works:
+
+1. **Principal**: The initial amount of money that is either invested or borrowed.
+
+2. **Interest Rate**: The rate at which interest is applied to the principal, typically expressed as an annual percentage.
+
+3. **Compounding Period**: The frequency with which interest is added to the principal (e.g., annually, semi-annually, quarterly, monthly, daily).
+
+### Formula for Compound Interest
+
+The formula for compound interest is:
+
+\[ A = P \left(1 + \frac{r}{n}\right)^{nt} \]
+
+Where:
+- \(A\) = the future value of the investment/loan, including interest
+- \(P\) = the principal investment amount (initial deposit or loan amount)
+- \(r\) = the annual interest rate (decimal)
+- \(n\) = the number of times that interest is compounded per year
+- \(t\) = the number of years the money is invested or borrowed
+
+### Example
+
+- **Principal (P)**: $1,000
+- **Annual Interest Rate (r)**: 5% or 0.05
+- **Compounding Periods per Year (n)**: 12 (monthly)
+- **Time (t)**: 1 year
+
+Using the formula:
+
+\[ A = 1000 \left(1 + \frac{0.05}{12}\right)^{12 \cdot 1} \]
+
+\[ A = 1000 \left(1 + 0.0041667\right)^{12} \]
+
+\[ A \approx 1000 \left(1.0041667\right)^{12} \]
+
+\[ A \approx 1000 \times 1.05116 \]
+
+\[ A \approx 1051.16 \]
+
+After one year, the investment would grow to approximately $1,051.16.
+
+### Key Points
+
+- **Frequency**: The more frequent the compounding, the more interest is earned or paid.
+- **Time**: The longer the money is invested or borrowed, the greater the effect of compounding.
+- **Interest Rate**: Higher rates increase the",2.7772738933563232,6.0,500.0,0.00012036,0.6,
+us.anthropic.claude-haiku-4-5-20251001-v1:0,How does compound interest work?,,0.3702230453491211,,,,,"An error occurred (AccessDeniedException) when calling the Converse operation: Model access is denied due to INVALID_PAYMENT_INSTRUMENT:A valid payment instrument must be provided.. Your AWS Marketplace subscription for this model cannot be completed at this time. If you recently fixed this issue, try again after 2 minutes."
+amazon.nova-micro-v1:0,What is the difference between APR and APY?,"The terms Annual Percentage Rate (APR) and Annual Percentage Yield (APY) are both used to describe the cost or benefit of borrowing or investing money over a year, but they have some key differences:
+
+### Annual Percentage Rate (APR)
+- **Definition**: APR represents the annual cost of borrowing money, including any fees and other costs involved.
+- **Components**: It includes the interest rate plus any additional fees or charges associated with the loan or credit product.
+- **Calculation**: It’s a straightforward way of understanding how much it costs to borrow money, expressed as an annual rate.
+- **Use**: Commonly used for loans, credit cards, and mortgages.
+
+### Example:
+If you have a credit card with a nominal interest rate of 18% and there are monthly fees of $2, the APR would factor in both the interest rate and the fees, giving you a more accurate yearly cost of using the credit card.
+
+### Annual Percentage Yield (APY)
+- **Definition**: APY represents the effective annual rate of return on an investment, taking into account the effect of compounding interest.
+- **Components**: It includes the interest rate and the compounding frequency (if interest is compounded more than once a year).
+- **Calculation**: APY is calculated using the formula: 
+  \[
+  \text{APY} = \left(1 + \frac{r}{n}\right)^n - 1
+  \]
+  where \( r \) is the nominal annual interest rate and \( n \) is the number of compounding periods per year.
+- **Use**: Commonly used for savings accounts, certificates of deposit (CDs), and other investments where interest is compounded.
+
+### Example:
+If you have a savings account with a nominal interest rate of 2% compounded monthly, the APY would be slightly higher than 2% because it accounts for the compounding effect.
+
+### Key Differences
+1. **Scope**:
+   - APR focuses on the cost of borrowing money.
+   - APY focuses on the return on an investment.
+   
+2. **Calculation Method**:
+   - APR does not account for compounding and includes all fees.
+   - APY accounts for compounding interest and gives a more accurate picture of the actual return.
+
+3. **Usage**:
+   - APR is typically used in loans and credit products.
+   - APY is typically used in savings and investment products.
+
+Understanding the difference between APR and APY can help you make",2.255605697631836,10.0,500.0,7.034999999999999e-05,0.68,
+amazon.nova-lite-v1:0,What is the difference between APR and APY?,"**Difference Between APR and APY**
+
+1. **Definition**:
+   - **APR (Annual Percentage Rate)**: The annual rate charged for borrowing or earned through an investment, without considering the effect of compounding within the year.
+   - **APY (Annual Percentage Yield)**: The annual rate that reflects the effect of compounding interest over a year.
+
+2. **Calculation**:
+   - **APR**: 
+     - Calculated as a simple interest rate.
+     - Formula: APR = (Interest / Principal) x 100
+   - **APY**: 
+     - Calculated considering the compounding effect.
+     - Formula: APY = (1 + APR/n)^n - 1, where n is the number of compounding periods per year.
+
+3. **Usage**:
+   - **APR**: 
+     - Commonly used for loans and credit cards.
+   - **APY**: 
+     - Typically used for savings accounts and investments.
+
+4. **Impact of Compounding**:
+   - **APR** does not account for compounding.
+   - **APY** reflects the compounding effect, often resulting in a higher effective rate than APR.",2.153323173522949,10.0,241.0,5.844e-05,0.6,
+us.anthropic.claude-haiku-4-5-20251001-v1:0,What is the difference between APR and APY?,,0.36749839782714844,,,,,"An error occurred (AccessDeniedException) when calling the Converse operation: Model access is denied due to INVALID_PAYMENT_INSTRUMENT:A valid payment instrument must be provided.. Your AWS Marketplace subscription for this model cannot be completed at this time. If you recently fixed this issue, try again after 2 minutes."
+amazon.nova-micro-v1:0,What is a Roth IRA?,"A Roth IRA (Individual Retirement Account) is a type of retirement savings account in the United States that offers tax-free growth and tax-free withdrawals in retirement, provided certain conditions are met. Here are some key features of a Roth IRA:
+
+1. **Taxation**: Contributions to a Roth IRA are made with after-tax dollars. This means you pay taxes on the money going into the account, but not on the money coming out in retirement, provided you follow the rules.
+
+2. **Eligibility**: Anyone with earned income can contribute to a Roth IRA, regardless of age. However, there are income limits that restrict who can contribute the maximum amount. For the most recent limits, you should refer to the IRS guidelines, as they change annually.
+
+3. **Contribution Limits**: For 2023, the maximum annual contribution limit is $6,500 for individuals under age 50. Individuals aged 50 and older can contribute an additional $1,000 catch-up contribution.
+
+4. **Growth**: Investments within a Roth IRA grow tax-free. This includes dividends, interest, and capital gains.
+
+5. **Withdrawals**: Qualified withdrawals from a Roth IRA are tax-free. To be a qualified distribution, the account must be at least five years old, and the account holder must be at least 59½ years old, become disabled, or meet other specific criteria like first-time home purchase (up to $10,000 lifetime limit).
+
+6. **No Required Minimum Distributions (RMDs)**: Unlike traditional IRAs and most other tax-deferred retirement accounts, Roth IRAs do not require the account holder to take any distributions at any age. This means you can let your money grow indefinitely.
+
+7. **Benefits**: 
+   - Tax-free growth and withdrawals.
+   - No RMDs.
+   - Contributions can be withdrawn anytime, tax-free and penalty-free.
+   - Flexibility in withdrawals; you can withdraw your contributions (not the earnings) at any time without tax or penalty.
+
+8. **Comparison to Traditional IRA**:
+   - In a traditional IRA, contributions may be tax-deductible, and withdrawals are taxed as ordinary income.
+   - With a Roth IRA, you pay taxes now but enjoy tax-free withdrawals in retirement.
+   
+Overall, a Roth IRA can be a valuable tool for retirement planning, especially for those expecting to be in",2.7219550609588623,6.0,500.0,7.021e-05,0.6666666666666666,
+amazon.nova-lite-v1:0,What is a Roth IRA?,"A Roth IRA is a type of individual retirement account (IRA) in the United States that offers tax-free growth and tax-free withdrawals under certain conditions. Here are the key features:
+
+1. **Contributions**: 
+   - Contributions are made with after-tax dollars.
+   - There are income limits for contributing to a Roth IRA.
+
+2. **Growth**: 
+   - Earnings on investments grow tax-free.
+
+3. **Withdrawals**: 
+   - Qualified withdrawals (those made after age 59 ½ and at least five years after the first contribution) are tax-free.
+   - Withdrawals of contributions (not earnings) are also tax-free at any time.
+
+4. **No Required Minimum Distributions (RMDs)**: 
+   - Unlike traditional IRAs, Roth IRAs do not require withdrawals at any age.
+
+5. **Eligibility**: 
+   - Available to individuals who meet certain income limits.
+
+Roth IRAs can be a valuable tool for retirement savings, especially for those expecting to be in a higher tax bracket in the future.",1.9506630897521973,6.0,221.0,5.3400000000000004e-05,0.6190476190476191,
+us.anthropic.claude-haiku-4-5-20251001-v1:0,What is a Roth IRA?,,0.368314266204834,,,,,"An error occurred (AccessDeniedException) when calling the Converse operation: Model access is denied due to INVALID_PAYMENT_INSTRUMENT:A valid payment instrument must be provided.. Your AWS Marketplace subscription for this model cannot be completed at this time. If you recently fixed this issue, try again after 2 minutes."
+amazon.nova-micro-v1:0,What is an index fund?,"An index fund is a type of mutual fund or exchange-traded fund (ETF) that is designed to replicate the performance of a specific market index, such as the S&P 500, Dow Jones Industrial Average, or NASDAQ Composite. Here are the key characteristics and features of index funds:
+
+1. **Passive Management**: Unlike actively managed funds, index funds do not attempt to outperform the market. Instead, they aim to match the index's performance. This passive management approach typically leads to lower fees.
+
+2. **Low Costs**: Because index funds do not require active trading strategies or a lot of research, they usually have lower expense ratios compared to actively managed funds. 
+
+3. **Diversification**: Index funds provide broad market exposure by holding a large number of stocks or bonds that make up the index. This diversification helps to reduce the risk associated with any single investment.
+
+4. **Consistency**: Over long periods, index funds tend to provide consistent returns that closely match the market. This is because they do not try to beat the market but rather mirror its performance.
+
+5. **Types**: There are two main types of index funds:
+   - **Mutual Funds**: These are pooled funds that are managed by professionals and traded at the end of the trading day at the net asset value (NAV).
+   - **Exchange-Traded Funds (ETFs)**: These trade on stock exchanges like individual stocks throughout the day. ETFs often have lower expense ratios and can be bought and sold throughout the trading day.
+
+6. **Investment Strategy**: Index funds are popular among investors who prefer a hands-off approach to investing. They are often used as part of a long-term investment strategy due to their stability and historically solid performance.
+
+7. **Accessibility**: Index funds are accessible to individual investors through brokerage accounts, often with little to no minimum investment requirements.
+
+Overall, index funds are a popular choice for those seeking a straightforward, cost-effective way to invest in the market.",2.393544912338257,6.0,402.0,5.6489999999999996e-05,0.8214285714285714,
+amazon.nova-lite-v1:0,What is an index fund?,"An index fund is a type of investment fund that aims to replicate the performance of a specific market index, such as the S&P 500 or the Dow Jones Industrial Average. Here are the key characteristics of an index fund:
+
+1. **Passive Management**: Unlike actively managed funds, index funds are passively managed. This means the fund's portfolio is designed to match the holdings of the underlying index, and there is minimal intervention from fund managers.
+
+2. **Diversification**: By tracking an index, an index fund offers broad market exposure, providing investors with diversification across multiple sectors and industries.
+
+3. **Lower Costs**: Index funds typically have lower expense ratios compared to actively managed funds because they require less research and trading activity.
+
+4. **Performance**: The performance of an index fund is directly tied to the performance of the index it tracks. While this means there is no potential for outperformance, it also means there is no potential for underperformance relative to the index.
+
+5. **Tax Efficiency**: Index funds can be more tax-efficient because there are fewer trades and capital gains distributions compared to actively managed funds.
+
+Index funds are popular among investors who prefer a low-cost, hands-off approach to investing and seek to match the overall market's performance.",2.1726109981536865,6.0,259.0,6.252e-05,0.7857142857142857,
+us.anthropic.claude-haiku-4-5-20251001-v1:0,What is an index fund?,,0.4526550769805908,,,,,"An error occurred (AccessDeniedException) when calling the Converse operation: Model access is denied due to INVALID_PAYMENT_INSTRUMENT:A valid payment instrument must be provided.. Your AWS Marketplace subscription for this model cannot be completed at this time. If you recently fixed this issue, try again after 2 minutes."
