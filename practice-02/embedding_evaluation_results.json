@@ -1,0 +1,44 @@
+{
+  "contrast_check": {
+    "titan-v1": {
+      "similar_pairs_avg": 0.8235232620516839,
+      "dissimilar_pairs_avg": 0.3697228391138536,
+      "separation": 0.4538004229378303
+    },
+    "titan-v2": {
+      "similar_pairs_avg": 0.6579315344219558,
+      "dissimilar_pairs_avg": 0.05891713227903991,
+      "separation": 0.5990144021429159
+    }
+  },
+  "retrieval": {
+    "titan-v1": {
+      "fixed_size": {
+        "hit_rate_at_3": 1.0,
+        "mrr": 1.0
+      },
+      "hierarchical": {
+        "hit_rate_at_3": 1.0,
+        "mrr": 1.0
+      },
+      "semantic": {
+        "hit_rate_at_3": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "titan-v2": {
+      "fixed_size": {
+        "hit_rate_at_3": 1.0,
+        "mrr": 1.0
+      },
+      "hierarchical": {
+        "hit_rate_at_3": 1.0,
+        "mrr": 1.0
+      },
+      "semantic": {
+        "hit_rate_at_3": 1.0,
+        "mrr": 1.0
+      }
+    }
+  }
+}

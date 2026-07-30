@@ -1,0 +1,22 @@
+{
+  "keyword_only": {
+    "hit_rate": 1.0,
+    "mrr": 1.0,
+    "ndcg": 1.0
+  },
+  "vector_only": {
+    "hit_rate": 1.0,
+    "mrr": 1.0,
+    "ndcg": 1.0
+  },
+  "hybrid": {
+    "hit_rate": 1.0,
+    "mrr": 1.0,
+    "ndcg": 1.0
+  },
+  "hybrid_reranked": {
+    "hit_rate": 1.0,
+    "mrr": 1.0,
+    "ndcg": 1.0
+  }
+}

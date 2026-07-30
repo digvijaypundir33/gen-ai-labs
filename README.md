@@ -12,10 +12,10 @@ Sharing these under `#awsexamprep`.
 
 | # | Practice | Topics | Status |
 |---|----------|--------|--------|
-| 01 | [Resilient multi-model AI assistant on Amazon Bedrock](./Practice-01-Resilient-Multi-Model-Bedrock-Assistant.md) — [build log](./Practice-01-Setup-Log.md) | Bedrock, model benchmarking, AppConfig, Lambda, API Gateway, Step Functions, a real circuit breaker | Parts 1-3 built and tested live, Part 4 documented only |
-| 02 | — | — | not started yet |
+| 01 | [Resilient multi-model AI assistant on Amazon Bedrock](./Practice-01-Resilient-Multi-Model-Bedrock-Assistant.md) — [build log](./Practice-01-Setup-Log.md) | Bedrock, model benchmarking, AppConfig, Lambda, API Gateway, Step Functions, a real circuit breaker | Parts 1-3 built and tested live, Part 4 documented only, everything torn down |
+| 02 | [RAG assistant over technical documentation](./Practice-02-RAG-Technical-Documentation-Assistant.md) — [build log](./Practice-02-Setup-Log.md) · [Q&A](./Practice-02-QnA.md) | Chunking strategies, embeddings, Bedrock Knowledge Bases, S3 Vectors, OpenSearch k-NN, hybrid search, reranking, MRR/NDCG, query decomposition, streaming | Stages 1-8 built and verified live, everything still running |
 
-I'll add `Practice-02-...` etc. as separate files as I go.
+I'll add `Practice-03-...` etc. as separate files as I go.
 
 ## What's in each practice writeup
 
@@ -32,5 +32,8 @@ a separate build log with every AWS resource I created and how to tear it down a
 - Lambda + API Gateway + Step Functions tied together
 - An actual stateful circuit breaker (DynamoDB-backed, not just retry+fallback)
 - Cost control basics — On-Demand billing where it matters, budgets, tearing things down
+- Which AWS services bill *while idle* and which don't, and designing around that
+- RAG end to end: chunking strategies, embeddings, vector stores, hybrid search, reranking
+- Measuring retrieval quality properly (precision/recall, MRR, NDCG) instead of eyeballing it
 
 — Digvijay Pundir. These are personal learning projects; AWS costs incurred are on me.

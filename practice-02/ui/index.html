@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RAG Assistant — AWS Documentation Q&A</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --accent: #2563eb;
+    --card: #f9fafb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115;
+      --fg: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #2a2e37;
+      --accent: #60a5fa;
+      --card: #171a21;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2rem 1rem;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  input[type="text"] {
+    flex: 1;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--fg);
+    font-size: 1rem;
+  }
+  button {
+    padding: 0.65rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .status { color: var(--muted); font-size: 0.9rem; min-height: 1.2rem; margin-bottom: 1rem; }
+  .answer-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    display: none;
+  }
+  .sources { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .sources h3 { font-size: 0.85rem; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+  .sources ul { margin: 0; padding-left: 1.2rem; font-size: 0.9rem; }
+  .sources li { margin-bottom: 0.3rem; }
+  .error { color: #dc2626; }
+  .stream-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>RAG Assistant</h1>
+    <div class="subtitle">Ask a question about Lambda, S3, DynamoDB, Bedrock, Step Functions, or API Gateway.</div>
+
+    <form id="askForm">
+      <input type="text" id="question" placeholder="e.g. What is the default Lambda concurrency limit?" autofocus>
+      <button type="submit" id="submitBtn">Ask</button>
+    </form>
+
+    <label class="stream-toggle">
+      <input type="checkbox" id="streamToggle" checked>
+      Stream response
+    </label>
+
+    <div class="status" id="status"></div>
+
+    <div class="answer-card" id="answerCard">
+      <div id="answerText"></div>
+      <div class="sources" id="sourcesSection" style="display:none">
+        <h3>Sources</h3>
+        <ul id="sourcesList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const WS_URL = "wss://tbex2czo8h.execute-api.us-east-1.amazonaws.com/prod";
+    const REST_URL = "https://ll4f40het1.execute-api.us-east-1.amazonaws.com/prod/ask";
+
+    const form = document.getElementById("askForm");
+    const input = document.getElementById("question");
+    const submitBtn = document.getElementById("submitBtn");
+    const streamToggle = document.getElementById("streamToggle");
+    const statusEl = document.getElementById("status");
+    const answerCard = document.getElementById("answerCard");
+    const answerText = document.getElementById("answerText");
+    const sourcesSection = document.getElementById("sourcesSection");
+    const sourcesList = document.getElementById("sourcesList");
+
+    function showSources(sources) {
+      const uniqueSources = [...new Map((sources || []).map(s => [s.uri, s])).values()];
+      if (uniqueSources.length) {
+        sourcesList.innerHTML = uniqueSources.map(s => `<li>${s.doc}</li>`).join("");
+        sourcesSection.style.display = "block";
+      } else {
+        sourcesSection.style.display = "none";
+      }
+    }
+
+    function askStreaming(query) {
+      statusEl.textContent = "Connecting...";
+      const ws = new WebSocket(WS_URL);
+      let gotFirstToken = false;
+
+      ws.addEventListener("open", () => {
+        statusEl.textContent = "Searching and generating an answer...";
+        ws.send(JSON.stringify({ action: "ask", question: query }));
+      });
+
+      ws.addEventListener("message", (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.error) {
+          statusEl.textContent = `Error: ${data.error}`;
+          statusEl.classList.add("error");
+          submitBtn.disabled = false;
+          ws.close();
+          return;
+        }
+
+        if (data.token) {
+          if (!gotFirstToken) {
+            statusEl.textContent = "";
+            gotFirstToken = true;
+          }
+          answerText.textContent += data.token;
+          return;
+        }
+
+        if (data.done) {
+          showSources(data.sources);
+          submitBtn.disabled = false;
+          ws.close();
+        }
+      });
+
+      ws.addEventListener("error", () => {
+        statusEl.textContent = "Error: connection failed";
+        statusEl.classList.add("error");
+        submitBtn.disabled = false;
+      });
+    }
+
+    async function askNonStreaming(query) {
+      statusEl.textContent = "Searching and generating an answer (a few seconds)...";
+      try {
+        const response = await fetch(REST_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || `Request failed (${response.status})`);
+        }
+
+        statusEl.textContent = "";
+        answerText.textContent = data.answer;
+        showSources(data.sources);
+      } catch (err) {
+        statusEl.textContent = `Error: ${err.message}`;
+        statusEl.classList.add("error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const query = input.value.trim();
+      if (!query) return;
+
+      submitBtn.disabled = true;
+      answerText.textContent = "";
+      sourcesSection.style.display = "none";
+      answerCard.style.display = "block";
+      statusEl.classList.remove("error");
+
+      if (streamToggle.checked) {
+        askStreaming(query);
+      } else {
+        askNonStreaming(query);
+      }
+    });
+  </script>
+</body>
+</html>

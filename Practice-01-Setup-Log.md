@@ -70,3 +70,20 @@ When I'm actually done with this project, work through the delete column above, 
 to top (newest/most-dependent resources first), then double-check in the console that Lambda,
 API Gateway, Step Functions, DynamoDB, AppConfig, and IAM are all actually clear — nothing here
 uses CloudFormation, so there's no single stack delete that sweeps everything at once.
+
+**Status: done (2026-07-29).** Went through the delete column top to bottom, newest first.
+Two things worth noting for next time:
+
+- The scoped `ai-assistant-project-user` could create resources but couldn't delete most of
+  them — its policies never included `iam:Delete*`/`iam:Detach*` actions, and it also had no
+  DynamoDB permissions at all (the table was made via the console under the admin login). Ended
+  up running the IAM role/user cleanup and the DynamoDB table delete under my admin profile
+  instead.
+- AppConfig has account-level deletion protection that blocks deleting an environment/app with
+  recent activity — deleted the AppConfig application via the console instead of chasing the
+  right CLI flag.
+- The Step Functions console auto-created an execution role with three extra managed policies
+  (CloudWatch Logs, X-Ray, scoped Lambda invoke) that all had to be individually detached (and
+  deleted, since they were customer-managed, not AWS-owned) before the role itself would delete.
+- Verified clear with a scripted sweep across Lambda, API Gateway, Step Functions, DynamoDB,
+  AppConfig, and IAM (users/roles/policies) after the fact — all empty.

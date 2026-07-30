@@ -1,0 +1,174 @@
+{
+  "Comment": "RAG query processing: cache check, complexity routing, expansion/decomposition, search, aggregation",
+  "StartAt": "CheckCacheAndClassify",
+  "States": {
+    "CheckCacheAndClassify": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:156207843797:function:query-router",
+        "Payload": {
+          "query.$": "$.query"
+        }
+      },
+      "ResultSelector": {
+        "cached.$": "$.Payload.cached",
+        "query.$": "$.Payload.query",
+        "queryHash.$": "$.Payload.queryHash",
+        "isComplex.$": "$.Payload.isComplex",
+        "result.$": "$.Payload.result"
+      },
+      "ResultPath": "$.routing",
+      "Next": "IsCached"
+    },
+    "IsCached": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.routing.cached",
+          "BooleanEquals": true,
+          "Next": "ReturnCached"
+        },
+        {
+          "Variable": "$.routing.isComplex",
+          "BooleanEquals": true,
+          "Next": "DecomposeQuery"
+        }
+      ],
+      "Default": "ExpandQuery"
+    },
+    "ReturnCached": {
+      "Type": "Pass",
+      "InputPath": "$.routing.result",
+      "End": true
+    },
+    "ExpandQuery": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:156207843797:function:query-expand",
+        "Payload": {
+          "query.$": "$.routing.query"
+        }
+      },
+      "ResultSelector": {
+        "expandedQueries.$": "$.Payload.expandedQueries"
+      },
+      "ResultPath": "$.expansion",
+      "Next": "SearchSimple"
+    },
+    "SearchSimple": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:156207843797:function:search",
+        "Payload": {
+          "expandedQueries.$": "$.expansion.expandedQueries"
+        }
+      },
+      "ResultSelector": {
+        "query.$": "$.Payload.query",
+        "results.$": "$.Payload.results"
+      },
+      "ResultPath": "$.finalResult",
+      "Next": "WriteCache"
+    },
+    "DecomposeQuery": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:156207843797:function:query-decompose",
+        "Payload": {
+          "query.$": "$.routing.query"
+        }
+      },
+      "ResultSelector": {
+        "subQueries.$": "$.Payload.subQueries"
+      },
+      "ResultPath": "$.decomposition",
+      "Next": "ProcessSubQueries"
+    },
+    "ProcessSubQueries": {
+      "Type": "Map",
+      "ItemsPath": "$.decomposition.subQueries",
+      "ItemSelector": {
+        "subQuery.$": "$$.Map.Item.Value"
+      },
+      "ItemProcessor": {
+        "ProcessorConfig": { "Mode": "INLINE" },
+        "StartAt": "ExpandSubQuery",
+        "States": {
+          "ExpandSubQuery": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "arn:aws:lambda:us-east-1:156207843797:function:query-expand",
+              "Payload": {
+                "query.$": "$.subQuery"
+              }
+            },
+            "ResultSelector": {
+              "expandedQueries.$": "$.Payload.expandedQueries"
+            },
+            "ResultPath": "$.expansion",
+            "Next": "SearchSubQuery"
+          },
+          "SearchSubQuery": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "arn:aws:lambda:us-east-1:156207843797:function:search",
+              "Payload": {
+                "expandedQueries.$": "$.expansion.expandedQueries"
+              }
+            },
+            "ResultSelector": {
+              "query.$": "$.Payload.query",
+              "results.$": "$.Payload.results"
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.subQueryResults",
+      "Next": "AggregateResults"
+    },
+    "AggregateResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:156207843797:function:aggregate",
+        "Payload": {
+          "originalQuery.$": "$.routing.query",
+          "subQueryResults.$": "$.subQueryResults"
+        }
+      },
+      "ResultSelector": {
+        "query.$": "$.Payload.query",
+        "subQueries.$": "$.Payload.subQueries",
+        "results.$": "$.Payload.results"
+      },
+      "ResultPath": "$.finalResult",
+      "Next": "WriteCache"
+    },
+    "WriteCache": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:156207843797:function:query-router",
+        "Payload": {
+          "action": "write",
+          "queryHash.$": "$.routing.queryHash",
+          "result.$": "$.finalResult"
+        }
+      },
+      "ResultPath": "$.cacheWrite",
+      "Next": "ReturnResult"
+    },
+    "ReturnResult": {
+      "Type": "Pass",
+      "InputPath": "$.finalResult",
+      "End": true
+    }
+  }
+}
