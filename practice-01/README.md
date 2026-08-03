@@ -101,7 +101,7 @@ calls gets excluded from scoring entirely.
 Landed on Nova Micro as primary, Nova Lite as fallback. That decision becomes
 `model_selection_strategy.json`, which Part 2 reads.
 
-![Benchmark run output showing the success-rate fix and the resulting strategy JSON](./practice-01/screenshots/part1-benchmark-summary.png)
+![Benchmark run output showing the success-rate fix and the resulting strategy JSON](./screenshots/part1-benchmark-summary.png)
 
 ## Part 2 — making the model choice configurable
 
@@ -165,7 +165,7 @@ actual point of a breaker versus plain retry, not wasting calls on something alr
 broken. Reverted the config, waited out the cooldown, watched one half-open trial succeed and
 reset it to closed.
 
-![Step Functions execution graph: TryPrimaryModel fails with a real ValidationException, gets caught, and falls through to the fallback model](./practice-01/screenshots/circuit-breaker-catch-and-fallback.png)
+![Step Functions execution graph: TryPrimaryModel fails with a real ValidationException, gets caught, and falls through to the fallback model](./screenshots/circuit-breaker-catch-and-fallback.png)
 
 Two bugs in my own first attempt, not the reference: the model-abstraction Lambda caches its
 AppConfig session token across warm invocations. AppConfig's polling API returns empty content
@@ -181,7 +181,7 @@ would've broken most real responses, not an edge case. Fixed with `.replaceAll("
 
 The full chain, working end to end — client request through API Gateway, Step Functions, Bedrock, and back (API key redacted):
 
-![A curl request hitting the live endpoint and getting a real Bedrock response back through the full API Gateway → Step Functions chain](./practice-01/screenshots/api-gateway-stepfunctions-response.png)
+![A curl request hitting the live endpoint and getting a real Bedrock response back through the full API Gateway → Step Functions chain](./screenshots/api-gateway-stepfunctions-response.png)
 
 ## What I skipped, and why
 
@@ -226,9 +226,9 @@ Can incur real AWS charges (Bedrock, Lambda, API Gateway, Step Functions, Dynamo
 1-3 are all pay-per-request — nothing bills while idle. The one thing that would bill
 continuously is a SageMaker endpoint, which is exactly why Part 4 wasn't deployed.
 
-Set a billing budget first. [Practice-01-Setup-Log.md](./Practice-01-Setup-Log.md) has every
+Set a billing budget first. [SETUP-LOG.md](./SETUP-LOG.md) has every
 resource created and how to delete each one — doubles as the teardown checklist.
 
 ---
 
-_Part of [Gen AI Practice](./README.md)._
+_Part of [Gen AI Practice](../README.md)._

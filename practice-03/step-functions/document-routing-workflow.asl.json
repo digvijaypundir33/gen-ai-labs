@@ -1,0 +1,56 @@
+{
+  "Comment": "Document Analysis Workflow with Intelligent Routing",
+  "StartAt": "ClassifyDocument",
+  "States": {
+    "ClassifyDocument": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "classify-document",
+        "Payload": {
+          "document.$": "$.document"
+        }
+      },
+      "ResultSelector": {
+        "type.$": "$.Payload.type",
+        "complexity.$": "$.Payload.complexity",
+        "processing_time.$": "$.Payload.processing_time"
+      },
+      "ResultPath": "$.classification",
+      "Next": "ProcessDocument"
+    },
+    "ProcessDocument": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "analyze",
+        "Payload": {
+          "document.$": "$.document",
+          "type.$": "$.classification.type"
+        }
+      },
+      "ResultSelector": {
+        "body.$": "$.Payload.body"
+      },
+      "ResultPath": "$.result",
+      "Next": "RecordMetrics"
+    },
+    "RecordMetrics": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "record-metrics",
+        "Payload": {
+          "classification.$": "$.classification",
+          "result_body.$": "$.result.body"
+        }
+      },
+      "ResultSelector": {
+        "recorded.$": "$.Payload.recorded",
+        "request_id.$": "$.Payload.request_id"
+      },
+      "ResultPath": "$.metrics",
+      "End": true
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # Practice 01 — Build Log & Cleanup Checklist
 
-Everything I actually created on AWS for [Practice 01](./Practice-01-Resilient-Multi-Model-Bedrock-Assistant.md),
+Everything I actually created on AWS for [Practice 01](./README.md),
 roughly in the order I created it, with what it cost and how to delete it again. I'm keeping
 this mostly so that when I'm done experimenting I can tear the whole thing down without
 missing something — the Cleanup column is meant to be run top to bottom at the end.

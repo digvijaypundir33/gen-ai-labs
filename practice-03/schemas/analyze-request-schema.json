@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "AnalyzeRequest",
+  "type": "object",
+  "required": ["document"],
+  "properties": {
+    "document": {
+      "type": "string",
+      "minLength": 10
+    },
+    "type": {
+      "type": "string",
+      "enum": ["general", "legal", "technical", "feedback"]
+    }
+  }
+}

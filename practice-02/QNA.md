@@ -1,7 +1,7 @@
 # Practice 02 — Q&A
 
 Questions I'd expect to be asked about the RAG system in
-[Practice 02](./Practice-02-RAG-Technical-Documentation-Assistant.md), with the answers I'd
+[Practice 02](./README.md), with the answers I'd
 give. Written for quick verbal recall rather than as documentation — the answers are the length
 you'd actually say out loud, and where a question has a trap in it, the trap is called out.
 
@@ -630,4 +630,4 @@ than people expect.
 
 ---
 
-_Part of [Gen AI Practice](./README.md)._
+_Part of [Gen AI Practice](../README.md)._

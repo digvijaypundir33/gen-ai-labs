@@ -1,0 +1,91 @@
+{
+  "widgets": [
+    {
+      "type": "metric", "x": 0, "y": 0, "width": 12, "height": 6,
+      "properties": {
+        "title": "Lambda Invocations",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Sum",
+        "metrics": [
+          ["AWS/Lambda", "Invocations", "FunctionName", "query-router"],
+          ["...", "query-expand"],
+          ["...", "query-decompose"],
+          ["...", "search"],
+          ["...", "aggregate"],
+          ["...", "generate"],
+          ["...", "check-and-sync"],
+          ["...", "ws-connect"],
+          ["...", "ws-disconnect"],
+          ["...", "ws-ask"]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 12, "y": 0, "width": 12, "height": 6,
+      "properties": {
+        "title": "Lambda Errors",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Sum",
+        "metrics": [
+          ["AWS/Lambda", "Errors", "FunctionName", "query-router"],
+          ["...", "query-expand"],
+          ["...", "query-decompose"],
+          ["...", "search"],
+          ["...", "aggregate"],
+          ["...", "generate"],
+          ["...", "check-and-sync"],
+          ["...", "ws-connect"],
+          ["...", "ws-disconnect"],
+          ["...", "ws-ask"]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 0, "y": 6, "width": 12, "height": 6,
+      "properties": {
+        "title": "Lambda Duration (avg, key latency-sensitive functions)",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Average",
+        "metrics": [
+          ["AWS/Lambda", "Duration", "FunctionName", "search"],
+          ["...", "generate"],
+          ["...", "ws-ask"],
+          ["...", "query-router"]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 12, "y": 6, "width": 12, "height": 6,
+      "properties": {
+        "title": "API Gateway Requests (REST + WebSocket)",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Sum",
+        "metrics": [
+          ["AWS/ApiGateway", "Count", "ApiName", "rag-assistant-api"],
+          ["AWS/ApiGateway", "Count", "ApiId", "tbex2czo8h"]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 0, "y": 12, "width": 12, "height": 6,
+      "properties": {
+        "title": "Step Functions Executions (rag-query-workflow)",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Sum",
+        "metrics": [
+          ["AWS/States", "ExecutionsStarted", "StateMachineArn", "arn:aws:states:us-east-1:156207843797:stateMachine:rag-query-workflow"],
+          ["AWS/States", "ExecutionsSucceeded", "StateMachineArn", "arn:aws:states:us-east-1:156207843797:stateMachine:rag-query-workflow"],
+          ["AWS/States", "ExecutionsFailed", "StateMachineArn", "arn:aws:states:us-east-1:156207843797:stateMachine:rag-query-workflow"]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 12, "y": 12, "width": 12, "height": 6,
+      "properties": {
+        "title": "DynamoDB Consumed Capacity",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Sum",
+        "metrics": [
+          ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "RagDocumentMetadata"],
+          ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "RagDocumentMetadata"],
+          ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "RagQueryCache"],
+          ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "RagQueryCache"]
+        ]
+      }
+    }
+  ]
+}

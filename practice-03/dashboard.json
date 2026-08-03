@@ -1,0 +1,89 @@
+{
+  "widgets": [
+    {
+      "type": "metric", "x": 0, "y": 0, "width": 12, "height": 6,
+      "properties": {
+        "title": "Lambda Invocations",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Sum",
+        "metrics": [
+          ["AWS/Lambda", "Invocations", "FunctionName", "analyze"],
+          ["...", "analyze-producer"],
+          ["...", "analyze-consumer"],
+          ["...", "analyze-stream"],
+          ["...", "classify-document"],
+          ["...", "record-metrics"],
+          ["...", "analyze-router"],
+          ["...", "get-analysis-result"]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 12, "y": 0, "width": 12, "height": 6,
+      "properties": {
+        "title": "Lambda Errors",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Sum",
+        "metrics": [
+          ["AWS/Lambda", "Errors", "FunctionName", "analyze"],
+          ["...", "analyze-producer"],
+          ["...", "analyze-consumer"],
+          ["...", "analyze-stream"],
+          ["...", "classify-document"],
+          ["...", "record-metrics"],
+          ["...", "analyze-router"],
+          ["...", "get-analysis-result"]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 0, "y": 6, "width": 12, "height": 6,
+      "properties": {
+        "title": "Lambda Duration (avg, key latency-sensitive functions)",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Average",
+        "metrics": [
+          ["AWS/Lambda", "Duration", "FunctionName", "analyze"],
+          ["...", "analyze-consumer"],
+          ["...", "analyze-stream"],
+          ["...", "analyze-router"]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 12, "y": 6, "width": 12, "height": 6,
+      "properties": {
+        "title": "SQS Queue Depth (main + DLQ)",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Average",
+        "metrics": [
+          ["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "document-analysis-queue"],
+          ["AWS/SQS", "ApproximateNumberOfMessagesNotVisible", "QueueName", "document-analysis-queue"],
+          ["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "document-analysis-dlq"]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 0, "y": 12, "width": 12, "height": 6,
+      "properties": {
+        "title": "Step Functions Executions (document-routing-workflow)",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Sum",
+        "metrics": [
+          ["AWS/States", "ExecutionsStarted", "StateMachineArn", "arn:aws:states:us-east-1:156207843797:stateMachine:document-routing-workflow"],
+          ["AWS/States", "ExecutionsSucceeded", "StateMachineArn", "arn:aws:states:us-east-1:156207843797:stateMachine:document-routing-workflow"],
+          ["AWS/States", "ExecutionsFailed", "StateMachineArn", "arn:aws:states:us-east-1:156207843797:stateMachine:document-routing-workflow"]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 12, "y": 12, "width": 12, "height": 6,
+      "properties": {
+        "title": "DynamoDB Consumed Capacity + SNS Publishes",
+        "view": "timeSeries", "stacked": false, "region": "us-east-1", "period": 300, "stat": "Sum",
+        "metrics": [
+          ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "ModelCircuitBreaker"],
+          ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "ModelCircuitBreaker"],
+          ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "RoutingMetrics"],
+          ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "RoutingMetrics"],
+          ["AWS/SNS", "NumberOfMessagesPublished", "TopicName", "document-analysis-notifications"]
+        ]
+      }
+    }
+  ]
+}

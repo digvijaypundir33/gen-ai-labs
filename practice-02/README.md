@@ -246,7 +246,7 @@ for existing** (roughly $0.30/metric and $3/dashboard beyond the free tier), reg
 anyone looks at them. Sticking to default metrics unless a dashboard is specifically the thing
 being learned.
 
-Every resource created gets logged in [Practice-02-Setup-Log.md](./Practice-02-Setup-Log.md),
+Every resource created gets logged in [SETUP-LOG.md](./SETUP-LOG.md),
 which doubles as the teardown checklist.
 
 ---
@@ -365,6 +365,12 @@ state machine won't go on to use — the whole state fails with `States.Runtime`
 `query-router`'s branches now always return the same full set of keys, using `null` as a
 placeholder for whichever field that branch didn't compute.
 
+**Later modified by Practice 03**: `search`'s KB retrieve call originally had no resilience at all
+(no retry, no circuit breaker — a throttled or unavailable Knowledge Base would just crash the
+Lambda). Practice 03's Stage 7 retrofits its resilience pattern onto this exact call; see
+[Practice-03 Stage 7](../practice-03/README.md#stage-7--retrofitting-resilience-onto-practice-02s-retrieval-path-built-and-verified-live)
+for the full record — that's where this specific change is documented, not here.
+
 ### Stage 6 — The RAG application (built, deployed, verified live in a browser)
 
 One new Lambda (`generate`), one API Gateway REST API, one static local HTML page — this is where
@@ -481,7 +487,7 @@ headless-automated.
 
 Practice 01 ended with Claude Haiku blocked by an AWS Marketplace payment-instrument problem that
 was never resolved, and `amazon.titan-rerank-v1` (which the reference calls at
-[practice-03.md:1166](./practice-03.md#L1166)) doesn't exist — `cohere.rerank-v3-5:0` is the only
+practice-03.md:1166) doesn't exist — `cohere.rerank-v3-5:0` is the only
 reranking model in the account. Since Cohere is also third-party, both the reranking stage and
 half of the embedding comparison risked hitting the same Marketplace wall.
 
@@ -516,21 +522,26 @@ worth fixing, it's an AWS Console / Marketplace billing action, not something fi
 
 ## Bugs found in the reference
 
+> The `practice-03.md:NNN` citations below refer to the reference/assignment document this
+> practice was built from, at the line numbers it had at the time. That file was later replaced
+> in this repo with a different assignment (Practice 03's), so the line numbers no longer resolve
+> to anything — they're kept as-is to show where each bug was found, not as working links.
+
 | # | Where | Issue → fix |
 |---|---|---|
-| 1 | `fixed_size_chunking` ([practice-03.md:745-759](./practice-03.md#L745-L759)) | **Infinite loop on every input.** The last iteration always sets `start = end - overlap`, which is always `< len(text)`, so the `while` never exits — it appends the same final chunk forever. Not an edge case; it hangs on every document. → advance `start` past `end` on the final chunk |
-| 2 | rerank model ([practice-03.md:1166](./practice-03.md#L1166)) | `amazon.titan-rerank-v1` doesn't exist, and reranking isn't a plain `invoke_model` with a `passages` body → use `cohere.rerank-v3-5:0` via the rerank API, or LLM-as-judge |
+| 1 | `fixed_size_chunking` (practice-03.md:745-759) | **Infinite loop on every input.** The last iteration always sets `start = end - overlap`, which is always `< len(text)`, so the `while` never exits — it appends the same final chunk forever. Not an edge case; it hangs on every document. → advance `start` past `end` on the final chunk |
+| 2 | rerank model (practice-03.md:1166) | `amazon.titan-rerank-v1` doesn't exist, and reranking isn't a plain `invoke_model` with a `passages` body → use `cohere.rerank-v3-5:0` via the rerank API, or LLM-as-judge |
 | 3 | KB client (both projects) | `boto3.client('bedrock')` for `create_knowledge_base` — KB management lives on the `bedrock-agent` client |
-| 4 | embedding ARN ([practice-03.md:288](./practice-03.md#L288)) | `arn:...::embeddings/amazon.titan-embed-text-v1` is not a valid ARN form → `foundation-model/`, as the same doc gets right at [line 1072](./practice-03.md#L1072) |
-| 5 | chunking config ([practice-03.md:309-315](./practice-03.md#L309-L315)) | `chunkingStrategy: "SEMANTIC_CHUNKING"` paired with `fixedSizeChunkingConfiguration` — mismatched, and that enum value isn't valid |
-| 6 | DynamoDB GSI ([practice-03.md:424-430](./practice-03.md#L424-L430)) | Declares `ProvisionedThroughput` on a GSI while the table is `PAY_PER_REQUEST` → validation error; GSIs inherit the table's billing mode |
-| 7 | index dimension ([practice-03.md:638](./practice-03.md#L638), [1019](./practice-03.md#L1019)) | Hardcodes `dimension: 1536` (Titan v1) but Phase 2 compares against Cohere v3 (1024) → the two phases contradict; needs one index per embedding model |
-| 8 | semantic chunker ([practice-03.md:801](./practice-03.md#L801)) | `amazon.titan-text-express-v1` is retired — confirmed dead in Practice 01 |
-| 9 | query expansion ([practice-03.md:1212](./practice-03.md#L1212), [1245](./practice-03.md#L1245)) | `anthropic.claude-3-sonnet-20240229-v1:0` was retired in July 2025 |
-| 10 | Project A chunk overlap ([practice-03.md:568](./practice-03.md#L568)) | `" ".join(current_chunk.split()[-overlap:])` takes the last 100 **words** while `max_chunk_size` counts **characters** — ~60% overlap on a 1000-char chunk, inflating embedding cost ~2.5× |
+| 4 | embedding ARN (practice-03.md:288) | `arn:...::embeddings/amazon.titan-embed-text-v1` is not a valid ARN form → `foundation-model/`, as the same doc gets right at line 1072 |
+| 5 | chunking config (practice-03.md:309-315) | `chunkingStrategy: "SEMANTIC_CHUNKING"` paired with `fixedSizeChunkingConfiguration` — mismatched, and that enum value isn't valid |
+| 6 | DynamoDB GSI (practice-03.md:424-430) | Declares `ProvisionedThroughput` on a GSI while the table is `PAY_PER_REQUEST` → validation error; GSIs inherit the table's billing mode |
+| 7 | index dimension (practice-03.md:638, 1019) | Hardcodes `dimension: 1536` (Titan v1) but Phase 2 compares against Cohere v3 (1024) → the two phases contradict; needs one index per embedding model |
+| 8 | semantic chunker (practice-03.md:801) | `amazon.titan-text-express-v1` is retired — confirmed dead in Practice 01 |
+| 9 | query expansion (practice-03.md:1212, 1245) | `anthropic.claude-3-sonnet-20240229-v1:0` was retired in July 2025 |
+| 10 | Project A chunk overlap (practice-03.md:568) | `" ".join(current_chunk.split()[-overlap:])` takes the last 100 **words** while `max_chunk_size` counts **characters** — ~60% overlap on a 1000-char chunk, inflating embedding cost ~2.5× |
 | 11 | ingestion Lambda | Writes processed output into the same bucket that triggers it → recursion unless the trigger is prefix-scoped |
 | 12 | Lambda packaging | `PyPDF2` (deprecated, now `pypdf`) and `python-docx` aren't in the Lambda runtime; the reference never mentions layers or container images |
-| 13 | k-NN engine ([practice-03.md:643](./practice-03.md#L643)) | `nmslib` is deprecated in current OpenSearch → `faiss` or `lucene` |
+| 13 | k-NN engine (practice-03.md:643) | `nmslib` is deprecated in current OpenSearch → `faiss` or `lucene` |
 | 14 | Project A Phase 4 | Connectors for Confluence/SharePoint/Documentum require tenants I don't have → Bedrock KB has native connectors for these plus a Web Crawler; using the crawler |
 | 15 | semantic chunking (mine) | First attempt used a fixed similarity threshold (0.55) to decide sentence-boundary breaks. Measured the actual Titan v2 sentence-to-sentence cosine similarity on this corpus and it ranges ~0.07-0.90 with mean ~0.50 — a flat cutoff near the mean breaks roughly half of all transitions, producing single-sentence "chunks" (~150 chars avg). Fixed by breaking only at the bottom quartile of *each document's own* similarity distribution (`np.percentile`), plus a minimum-sentence floor — chunk sizes came back in line with the other two strategies (~550-750 chars avg) |
 | 16 | Bedrock console (Stage 3, mine) | The Knowledge Base creation wizard's top-level, pre-selected option is now "Managed KB" (AWS manages the vector store internally) rather than the customer-managed flow the whole plan assumed — had to explicitly pick "Unstructured Vector Store KB" under "Self-managed KB" instead. Confirmed via `get-knowledge-base`: the Managed attempt had no vector-store reference in its config at all, meaning the S3 Vectors index built for this project would've gone completely unused |
@@ -561,5 +572,5 @@ adding understanding.
 
 ---
 
-_Part of [Gen AI Practice](./README.md). Q&A prep for this material:
-[Practice-02-QnA.md](./Practice-02-QnA.md)._
+_Part of [Gen AI Practice](../README.md). Q&A prep for this material:
+[QNA.md](./QNA.md)._

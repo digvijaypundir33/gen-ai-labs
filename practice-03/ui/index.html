@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Document Analysis Pipeline</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --accent: #2563eb;
+    --card: #f9fafb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115;
+      --fg: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #2a2e37;
+      --accent: #60a5fa;
+      --card: #171a21;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2rem 1rem;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .modes {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .mode-btn {
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--fg);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .mode-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .mode-desc { color: var(--muted); font-size: 0.8rem; margin-bottom: 1rem; min-height: 2.2em; }
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--fg);
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    margin-bottom: 0.75rem;
+  }
+  .row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+  select {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--fg);
+    font-size: 0.9rem;
+  }
+  button.submit {
+    padding: 0.65rem 1.3rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button.submit:disabled { opacity: 0.6; cursor: default; }
+  .status { color: var(--muted); font-size: 0.9rem; min-height: 1.2rem; margin-bottom: 1rem; }
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    display: none;
+  }
+  .meta { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+  .meta span { display: inline-block; margin-right: 1.2rem; }
+  .meta b { color: var(--fg); }
+  .error { color: #dc2626; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Document Analysis Pipeline</h1>
+    <div class="subtitle">Practice 03 — test all four request paths against the real deployed AWS backend.</div>
+
+    <div class="modes">
+      <button class="mode-btn active" data-mode="sync">Sync</button>
+      <button class="mode-btn" data-mode="async">Async (SQS)</button>
+      <button class="mode-btn" data-mode="stream">Streaming (WebSocket)</button>
+      <button class="mode-btn" data-mode="smart">Smart routing</button>
+    </div>
+    <div class="mode-desc" id="modeDesc"></div>
+
+    <form id="analyzeForm">
+      <textarea id="document" placeholder="Paste a document to analyze (10+ characters)..." autofocus></textarea>
+      <div class="row">
+        <label for="type" id="typeLabel">Document type:</label>
+        <select id="type">
+          <option value="general">general</option>
+          <option value="legal">legal</option>
+          <option value="technical">technical</option>
+          <option value="feedback">feedback</option>
+        </select>
+        <button type="submit" class="submit" id="submitBtn">Analyze</button>
+      </div>
+    </form>
+
+    <div class="status" id="status"></div>
+
+    <div class="result-card" id="resultCard">
+      <div id="analysisText"></div>
+      <div class="meta" id="metaSection"></div>
+    </div>
+  </div>
+
+  <script>
+    const REST_BASE = "https://ll4f40het1.execute-api.us-east-1.amazonaws.com/prod";
+    const WS_URL = "wss://tbex2czo8h.execute-api.us-east-1.amazonaws.com/prod";
+
+    const modeBtns = document.querySelectorAll(".mode-btn");
+    const modeDesc = document.getElementById("modeDesc");
+    const typeRow = document.getElementById("typeLabel");
+    const typeSelect = document.getElementById("type");
+    const form = document.getElementById("analyzeForm");
+    const documentInput = document.getElementById("document");
+    const submitBtn = document.getElementById("submitBtn");
+    const statusEl = document.getElementById("status");
+    const resultCard = document.getElementById("resultCard");
+    const analysisText = document.getElementById("analysisText");
+    const metaSection = document.getElementById("metaSection");
+
+    let mode = "sync";
+
+    const MODE_INFO = {
+      sync: "POST /analyze — you pick the type, one blocking request, one response.",
+      async: "POST /analyze-async — returns a job_id immediately, processes via SQS in the background, UI polls GET /analyze-async/{job_id} until done.",
+      stream: "WebSocket 'analyze' route — same resilience logic as sync, but tokens render as they arrive.",
+      smart: "POST /analyze-smart — no type needed. A Step Functions workflow classifies the document itself, then routes and records metrics.",
+    };
+
+    modeBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        modeBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        mode = btn.dataset.mode;
+        modeDesc.textContent = MODE_INFO[mode];
+        typeRow.style.display = mode === "smart" ? "none" : "inline";
+        typeSelect.style.display = mode === "smart" ? "none" : "inline-block";
+      });
+    });
+    modeDesc.textContent = MODE_INFO[mode];
+
+    function showMeta(fields) {
+      metaSection.innerHTML = Object.entries(fields)
+        .filter(([, v]) => v !== undefined && v !== null)
+        .map(([k, v]) => `<span><b>${k}:</b> ${v}</span>`)
+        .join("");
+    }
+
+    async function runSync(document_, type) {
+      statusEl.textContent = "Calling /analyze...";
+      const res = await fetch(`${REST_BASE}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ document: document_, type }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+      statusEl.textContent = "";
+      analysisText.textContent = data.analysis;
+      showMeta({ "model used": data.model_used });
+    }
+
+    async function runAsync(document_, type) {
+      statusEl.textContent = "Queuing via /analyze-async...";
+      const res = await fetch(`${REST_BASE}/analyze-async`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ document: document_, type }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+
+      const jobId = data.job_id;
+      statusEl.textContent = `Queued (job_id: ${jobId}). Waiting for the consumer to process it...`;
+
+      const deadline = Date.now() + 30000;
+      while (Date.now() < deadline) {
+        await new Promise(r => setTimeout(r, 2000));
+        const pollRes = await fetch(`${REST_BASE}/analyze-async/${jobId}`);
+        const pollData = await pollRes.json();
+        if (pollData.status === "completed") {
+          statusEl.textContent = "";
+          analysisText.textContent = pollData.analysis;
+          showMeta({ "model used": pollData.model_used, "job_id": jobId, "document type": pollData.document_type });
+          return;
+        }
+        statusEl.textContent = `Still processing (job_id: ${jobId})...`;
+      }
+      throw new Error("Timed out waiting for async result after 30s");
+    }
+
+    function runStream(document_, type) {
+      return new Promise((resolve, reject) => {
+        statusEl.textContent = "Connecting...";
+        const ws = new WebSocket(WS_URL);
+        let gotFirstToken = false;
+
+        ws.addEventListener("open", () => {
+          statusEl.textContent = "Streaming...";
+          ws.send(JSON.stringify({ action: "analyze", document: document_, type }));
+        });
+
+        ws.addEventListener("message", (event) => {
+          const data = JSON.parse(event.data);
+          if (data.error) {
+            ws.close();
+            reject(new Error(data.error));
+            return;
+          }
+          if (data.token) {
+            if (!gotFirstToken) {
+              statusEl.textContent = "";
+              gotFirstToken = true;
+            }
+            analysisText.textContent += data.token;
+            return;
+          }
+          if (data.done) {
+            showMeta({ "model used": data.model_used });
+            ws.close();
+            resolve();
+          }
+        });
+
+        ws.addEventListener("error", () => reject(new Error("WebSocket connection failed")));
+      });
+    }
+
+    async function runSmart(document_) {
+      statusEl.textContent = "Calling /analyze-smart (classify → route → process → record)...";
+      const res = await fetch(`${REST_BASE}/analyze-smart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ document: document_ }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+      statusEl.textContent = "";
+      analysisText.textContent = data.analysis;
+      showMeta({
+        "model used": data.model_used,
+        "inferred type": data.classification?.type,
+        "complexity": data.classification?.complexity,
+        "request_id": data.request_id,
+      });
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const document_ = documentInput.value.trim();
+      if (document_.length < 10) {
+        statusEl.textContent = "Document must be at least 10 characters.";
+        statusEl.classList.add("error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      analysisText.textContent = "";
+      metaSection.innerHTML = "";
+      resultCard.style.display = "block";
+      statusEl.classList.remove("error");
+
+      const type = typeSelect.value;
+
+      try {
+        if (mode === "sync") await runSync(document_, type);
+        else if (mode === "async") await runAsync(document_, type);
+        else if (mode === "stream") await runStream(document_, type);
+        else if (mode === "smart") await runSmart(document_);
+      } catch (err) {
+        statusEl.textContent = `Error: ${err.message}`;
+        statusEl.classList.add("error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

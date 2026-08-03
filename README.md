@@ -12,10 +12,12 @@ Sharing these under `#awsexamprep`.
 
 | # | Practice | Topics | Status |
 |---|----------|--------|--------|
-| 01 | [Resilient multi-model AI assistant on Amazon Bedrock](./Practice-01-Resilient-Multi-Model-Bedrock-Assistant.md) — [build log](./Practice-01-Setup-Log.md) | Bedrock, model benchmarking, AppConfig, Lambda, API Gateway, Step Functions, a real circuit breaker | Parts 1-3 built and tested live, Part 4 documented only, everything torn down |
-| 02 | [RAG assistant over technical documentation](./Practice-02-RAG-Technical-Documentation-Assistant.md) — [build log](./Practice-02-Setup-Log.md) · [Q&A](./Practice-02-QnA.md) | Chunking strategies, embeddings, Bedrock Knowledge Bases, S3 Vectors, OpenSearch k-NN, hybrid search, reranking, MRR/NDCG, query decomposition, streaming | Stages 1-8 built and verified live, everything still running |
+| 01 | [Resilient multi-model AI assistant on Amazon Bedrock](./practice-01/) — [build log](./practice-01/SETUP-LOG.md) | Bedrock, model benchmarking, AppConfig, Lambda, API Gateway, Step Functions, a real circuit breaker | Parts 1-3 built and tested live, Part 4 documented only, everything torn down |
+| 02 | [RAG assistant over technical documentation](./practice-02/) — [build log](./practice-02/SETUP-LOG.md) · [Q&A](./practice-02/QNA.md) | Chunking strategies, embeddings, Bedrock Knowledge Bases, S3 Vectors, OpenSearch k-NN, hybrid search, reranking, MRR/NDCG, query decomposition, streaming | Stages 1-8 built and verified live, everything still running |
+| 03 | [Resilient document analysis pipeline](./practice-03/) — [build log](./practice-03/SETUP-LOG.md) | Sync/async APIs, SQS + DLQ, SNS, WebSocket streaming, DynamoDB circuit breaker, X-Ray, Step Functions model routing — built on top of Practice 02's existing infrastructure rather than from scratch | Stages 1-7 built and verified live, everything still running |
 
-I'll add `Practice-03-...` etc. as separate files as I go.
+Each practice lives in its own folder — the write-up is that folder's `README.md`, alongside its
+build log, code, and anything else it produced. I'll add `practice-04/` etc. as I go.
 
 ## What's in each practice writeup
 
@@ -35,5 +37,10 @@ a separate build log with every AWS resource I created and how to tear it down a
 - Which AWS services bill *while idle* and which don't, and designing around that
 - RAG end to end: chunking strategies, embeddings, vector stores, hybrid search, reranking
 - Measuring retrieval quality properly (precision/recall, MRR, NDCG) instead of eyeballing it
+- Streaming model output to a browser over API Gateway WebSockets
+- Decoupling slow work with SQS + a dead-letter queue, and notifying via SNS
+- Request validation at the API edge (JSON Schema) so bad input never reaches a Lambda
+- Tracing a request across services with X-Ray, and building CloudWatch dashboards
+- Letting the system classify its own input and route accordingly, instead of trusting the caller
 
 — Digvijay Pundir. These are personal learning projects; AWS costs incurred are on me.
