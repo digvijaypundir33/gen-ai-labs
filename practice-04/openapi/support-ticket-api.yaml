@@ -1,0 +1,213 @@
+openapi: 3.0.0
+info:
+  title: Support Ticket API
+  description: >
+    AI-assisted support ticket intake and customer feedback processing.
+    Documents the actual deployed surface added in Practice 04, on top of
+    the existing rag-assistant-api (practice-02/03 routes are documented
+    separately in their own practices).
+  version: 1.0.0
+servers:
+  - url: https://ll4f40het1.execute-api.us-east-1.amazonaws.com/prod
+paths:
+  /tickets:
+    post:
+      summary: Submit a support ticket
+      description: >
+        Validates and stores the ticket, then synchronously runs it through
+        the support-ticket-workflow (classify -> knowledge base lookup ->
+        draft response -> CRM update) before responding. A Lambda REQUEST
+        authorizer rejects oversized requests (Content-Length) before this
+        handler ever runs; precise token counting happens inside the handler.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketRequest'
+      responses:
+        '200':
+          description: Ticket processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '400':
+          description: Missing/invalid subject or description
+        '403':
+          description: Rejected by the authorizer (request too large)
+        '413':
+          description: Description exceeds the token limit
+        '502':
+          description: The processing workflow failed
+    options:
+      summary: CORS preflight
+      responses:
+        '200':
+          description: CORS headers
+  /tickets/{ticketId}:
+    get:
+      summary: Get a ticket's current state and result
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ticket record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketRecord'
+        '400':
+          description: ticketId missing from path
+        '404':
+          description: Ticket not found
+  /feedback:
+    post:
+      summary: Submit a customer feedback document for processing
+      description: >
+        Uploads the document to S3 and starts an asynchronous Amazon Bedrock
+        Data Automation job against it. Supported formats: docx, pdf, png,
+        jpg, jpeg (plain text is not a supported BDA input format).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+      responses:
+        '202':
+          description: Job accepted, processing asynchronously
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackJobAccepted'
+        '400':
+          description: Missing fileBase64 or unsupported fileExtension
+  /feedback/{jobId}:
+    get:
+      summary: Poll a feedback processing job's result
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job finished
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackResult'
+        '202':
+          description: Job still in progress
+        '400':
+          description: jobId missing from path
+components:
+  schemas:
+    TicketRequest:
+      type: object
+      required: [subject, description]
+      properties:
+        subject:
+          type: string
+        description:
+          type: string
+          minLength: 10
+        category:
+          type: string
+          enum: [technical, billing, feature, other]
+          default: other
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          default: medium
+    TicketResponse:
+      type: object
+      properties:
+        ticketId:
+          type: string
+        status:
+          type: string
+          example: responded
+        tokenCount:
+          type: integer
+        classification:
+          type: object
+          properties:
+            category:
+              type: string
+            urgency:
+              type: string
+            reasoning:
+              type: string
+        aiResponse:
+          type: string
+        modelUsed:
+          type: string
+          enum: [urgent, standard]
+    TicketRecord:
+      type: object
+      properties:
+        ticket_id:
+          type: string
+        subject:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        priority:
+          type: string
+        status:
+          type: string
+        urgency:
+          type: string
+        ai_response:
+          type: string
+        model_used:
+          type: string
+        crm_update_id:
+          type: string
+        created_at:
+          type: integer
+        updated_at:
+          type: integer
+    FeedbackRequest:
+      type: object
+      required: [fileBase64, fileExtension]
+      properties:
+        fileBase64:
+          type: string
+          description: Base64-encoded document content
+        fileExtension:
+          type: string
+          enum: [docx, pdf, png, jpg, jpeg]
+    FeedbackJobAccepted:
+      type: object
+      properties:
+        jobId:
+          type: string
+        invocationArn:
+          type: string
+        status:
+          type: string
+          example: InProgress
+    FeedbackResult:
+      type: object
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+          example: Success
+        summary:
+          type: string
+        description:
+          type: string
+        text:
+          type: string

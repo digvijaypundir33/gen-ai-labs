@@ -2,6 +2,11 @@
 .venv/
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# Node / React (practice-04/ui-react)
+node_modules/
+dist/
 
 # macOS
 .DS_Store
@@ -12,3 +17,6 @@ __pycache__/
 # Leftover AWS CLI outfile artifacts
 response.json
 hosted-config-version-response.json
+
+# Pulled from an external repo, not ours to track (see interview-prep/README.md)
+interview-prep/

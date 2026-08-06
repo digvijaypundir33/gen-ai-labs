@@ -1,0 +1,79 @@
+{
+  "Comment": "Support Ticket Processing Workflow",
+  "StartAt": "ClassifyTicket",
+  "States": {
+    "ClassifyTicket": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "ticket-classify",
+        "Payload": {
+          "subject.$": "$.subject",
+          "description.$": "$.description"
+        }
+      },
+      "ResultSelector": {
+        "category.$": "$.Payload.category",
+        "urgency.$": "$.Payload.urgency",
+        "reasoning.$": "$.Payload.reasoning"
+      },
+      "ResultPath": "$.classification",
+      "Next": "QueryInternalKnowledge"
+    },
+    "QueryInternalKnowledge": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "ticket-kb-lookup",
+        "Payload": {
+          "subject.$": "$.subject",
+          "description.$": "$.description"
+        }
+      },
+      "ResultSelector": {
+        "kb_context.$": "$.Payload.kb_context"
+      },
+      "ResultPath": "$.knowledge",
+      "Next": "GenerateResponse"
+    },
+    "GenerateResponse": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "ticket-generate-response",
+        "Payload": {
+          "subject.$": "$.subject",
+          "description.$": "$.description",
+          "priority.$": "$.priority",
+          "kb_context.$": "$.knowledge.kb_context"
+        }
+      },
+      "ResultSelector": {
+        "response.$": "$.Payload.response",
+        "status.$": "$.Payload.status",
+        "modelUsed.$": "$.Payload.modelUsed"
+      },
+      "ResultPath": "$.generation",
+      "Next": "UpdateCRM"
+    },
+    "UpdateCRM": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "crm-mock-update",
+        "Payload": {
+          "ticket_id.$": "$.ticket_id",
+          "classification.$": "$.classification",
+          "ai_response.$": "$.generation.response",
+          "model_used.$": "$.generation.modelUsed"
+        }
+      },
+      "ResultSelector": {
+        "crm_update_id.$": "$.Payload.crm_update_id",
+        "status.$": "$.Payload.status"
+      },
+      "ResultPath": "$.crm",
+      "End": true
+    }
+  }
+}

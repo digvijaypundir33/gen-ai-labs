@@ -1,0 +1,16 @@
+Customer Feedback Submission
+Product: Google Support Portal
+Rating: 4/5
+
+I wanted to share some thoughts after using the support portal for about six weeks.
+Overall the experience has been solid. Ticket submission is quick and the priority
+field actually seems to matter - my critical issue got a response within ten minutes,
+which honestly surprised me given how bad support usually is elsewhere.
+
+The live chat feature is nice for quick questions, though it occasionally gives a
+generic answer when my question is very specific to our setup. The one thing I would
+genuinely like improved is the search in the knowledge base - I often know the article
+I want exists somewhere but can't find it by searching, and end up just opening a
+ticket instead. If that got fixed, I probably wouldn't need to contact support nearly
+as often. Otherwise, keep doing what you are doing, this has been a noticeable
+improvement over the old system.
