@@ -11,6 +11,61 @@ GENERATE_MODEL = "amazon.nova-lite-v1:0"
 MAX_WAIT_SECONDS = 25
 POLL_INTERVAL_SECONDS = 1
 
+GUARDRAIL_ID = "5jk3sefhtv16"
+GUARDRAIL_VERSION = "5"
+BLOCKED_MESSAGE = (
+    "I'm sorry, but I can't help with that request. If you believe this is an "
+    "error, please contact support directly."
+)
+
+
+def _is_hard_block(assessment):
+    """Mirrors generate/lambda_function.py - this Lambda had none of the
+    guardrail wiring that was added there in Stages 2/3/7 (input check, inline
+    guardrailConfig, contextual grounding) - the streaming path (default-on in
+    the UI) was unprotected while the REST path was fully covered.
+    """
+    topic = assessment.get("topicPolicy") or {}
+    if any(e.get("action") == "BLOCKED" for e in topic.get("topics", [])):
+        return True
+    content = assessment.get("contentPolicy") or {}
+    if any(e.get("action") == "BLOCKED" for e in content.get("filters", [])):
+        return True
+    word = assessment.get("wordPolicy") or {}
+    if any(e.get("action") == "BLOCKED" for e in word.get("words", []) + word.get("managedWordLists", [])):
+        return True
+    sensitive = assessment.get("sensitiveInformationPolicy") or {}
+    if any(e.get("action") == "BLOCKED" for e in sensitive.get("piiEntities", []) + sensitive.get("regexes", [])):
+        return True
+    return False
+
+
+def _grounding_failed(assessment):
+    grounding = assessment.get("contextualGroundingPolicy") or {}
+    return any(f.get("action") == "BLOCKED" for f in grounding.get("filters", []))
+
+
+def _grounding_score(assessment):
+    grounding = assessment.get("contextualGroundingPolicy") or {}
+    for f in grounding.get("filters", []):
+        if f.get("type") == "GROUNDING":
+            return f.get("score")
+    return None
+
+
+def check_input_safety(query):
+    response = bedrock_runtime.apply_guardrail(
+        guardrailIdentifier=GUARDRAIL_ID,
+        guardrailVersion=GUARDRAIL_VERSION,
+        source="INPUT",
+        content=[{"text": {"text": query}}],
+    )
+    assessment = (response.get("assessments") or [{}])[0]
+    blocked = response["action"] == "GUARDRAIL_INTERVENED" and _is_hard_block(assessment)
+    outputs = response.get("outputs") or []
+    filtered_query = outputs[0]["text"] if outputs else query
+    return blocked, filtered_query
+
 
 def run_retrieval(query):
     execution = stepfunctions.start_execution(
@@ -33,16 +88,14 @@ def run_retrieval(query):
     return status, output
 
 
-def build_prompt(query, chunks):
-    context_text = "\n\n".join(
-        f"[Source {i + 1}: {c['doc']}]\n{c['text']}" for i, c in enumerate(chunks)
-    )
+def build_instruction(query):
+    # Matches generate/lambda_function.py's Stage 3 wording fix - the original
+    # imperative "answer using ONLY... say so explicitly rather than guessing"
+    # phrasing measurably tripped the PROMPT_ATTACK filter on benign content.
     return (
-        "Answer the question using ONLY the information in the sources below. Cite sources "
-        "inline by their [Source N] label where you use them. If the sources don't contain "
-        "enough information to answer, say so explicitly rather than guessing.\n\n"
-        f"Sources:\n{context_text}\n\n"
-        f"Question: {query}"
+        "Use the reference material to answer the question below. Include a [Source N] "
+        "citation for any fact you use. If the material doesn't cover the answer, state "
+        f"that clearly.\n\nQuestion: {query}"
     )
 
 
@@ -63,7 +116,13 @@ def lambda_handler(event, context):
         send({"error": "missing 'question'"})
         return {"statusCode": 400}
 
-    status, output = run_retrieval(query)
+    input_blocked, filtered_query = check_input_safety(query)
+    if input_blocked:
+        send({"token": BLOCKED_MESSAGE})
+        send({"done": True, "sources": [], "guardrail_action": "input_blocked"})
+        return {"statusCode": 200}
+
+    status, output = run_retrieval(filtered_query)
     if status != "SUCCEEDED":
         send({"error": f"retrieval did not complete in time (status={status})"})
         return {"statusCode": 504}
@@ -76,25 +135,85 @@ def lambda_handler(event, context):
         send({"done": True, "sources": []})
         return {"statusCode": 200}
 
-    prompt = build_prompt(query, chunks)
+    context_text = "\n\n".join(
+        f"[Source {i + 1}: {c['doc']}]\n{c['text']}" for i, c in enumerate(chunks)
+    )
+    instruction = build_instruction(filtered_query)
 
     try:
         response = bedrock_runtime.converse_stream(
             modelId=GENERATE_MODEL,
-            messages=[{"role": "user", "content": [{"text": prompt}]}],
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"guardContent": {"text": {"text": context_text, "qualifiers": ["grounding_source"]}}},
+                    {"guardContent": {"text": {"text": instruction, "qualifiers": ["query"]}}},
+                ],
+            }],
+            guardrailConfig={"guardrailIdentifier": GUARDRAIL_ID, "guardrailVersion": GUARDRAIL_VERSION, "trace": "enabled"},
             inferenceConfig={"maxTokens": 500, "temperature": 0},
         )
+        stop_reason = None
+        guardrail_trace = None
         for stream_event in response["stream"]:
             if "contentBlockDelta" in stream_event:
                 text = stream_event["contentBlockDelta"]["delta"].get("text")
                 if text:
                     send({"token": text})
+            elif "messageStop" in stream_event:
+                stop_reason = stream_event["messageStop"].get("stopReason")
+            elif "metadata" in stream_event:
+                guardrail_trace = stream_event["metadata"].get("trace", {}).get("guardrail")
 
+        hard_blocked = False
+        ungrounded = False
+        grounding_score = None
+        if guardrail_trace:
+            output_assessments = (guardrail_trace.get("outputAssessments") or {}).get(GUARDRAIL_ID, [])
+            grounding_score = next((_grounding_score(a) for a in output_assessments if _grounding_score(a) is not None), None)
+            if stop_reason == "guardrail_intervened":
+                input_assessment = (guardrail_trace.get("inputAssessment") or {}).get(GUARDRAIL_ID, {})
+                ungrounded = any(_grounding_failed(a) for a in output_assessments)
+                hard_blocked = (
+                    _is_hard_block(input_assessment)
+                    or any(_is_hard_block(a) for a in output_assessments)
+                    or ungrounded
+                )
+
+        if hard_blocked:
+            guardrail_action = "ungrounded_intervened" if ungrounded else "output_intervened"
+        elif stop_reason == "guardrail_intervened":
+            guardrail_action = "anonymized"
+        else:
+            guardrail_action = "none"
+
+        # Tokens are forwarded live as they're generated, before the guardrail
+        # verdict is known - grounding in particular can only be scored once
+        # enough text exists, so a chunk of the (possibly ungrounded) answer
+        # may have already reached the client by the time we learn it should
+        # have been withheld. "retract" tells the frontend to discard whatever
+        # partial text it's displaying and show `answer` instead of appending
+        # the blocked message onto it - fixes the garbled display, but doesn't
+        # undo the fact that partial content was already visible for a moment;
+        # only a fully-buffered (non-streaming) response can prevent that.
         send({
             "done": True,
-            "sources": [{"doc": c["doc"], "uri": c["uri"]} for c in chunks],
+            "retract": hard_blocked,
+            "answer": BLOCKED_MESSAGE if hard_blocked else None,
+            "sources": [] if hard_blocked else [{"doc": c["doc"], "uri": c["uri"]} for c in chunks],
+            "guardrail_action": guardrail_action,
+            "confidence": grounding_score,
         })
     except apigw.exceptions.GoneException:
         pass  # client disconnected mid-stream - nothing left to send to
+    except Exception as e:
+        # A transient Bedrock-side error (e.g. internalServerException mid-stream)
+        # otherwise crashes the Lambda unhandled - the client never gets a "done"
+        # or "error" message and just hangs waiting for a response that never
+        # comes. Surface it explicitly instead.
+        try:
+            send({"error": f"generation failed: {e}"})
+        except apigw.exceptions.GoneException:
+            pass
 
     return {"statusCode": 200}

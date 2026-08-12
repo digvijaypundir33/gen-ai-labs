@@ -16,6 +16,7 @@ Sharing these under `#awsexamprep`.
 | 02 | [RAG assistant over technical documentation](./practice-02/) — [build log](./practice-02/SETUP-LOG.md) · [Q&A](./practice-02/QNA.md) | Chunking strategies, embeddings, Bedrock Knowledge Bases, S3 Vectors, OpenSearch k-NN, hybrid search, reranking, MRR/NDCG, query decomposition, streaming | Stages 1-8 built and verified live, everything still running |
 | 03 | [Resilient document analysis pipeline](./practice-03/) — [build log](./practice-03/SETUP-LOG.md) | Sync/async APIs, SQS + DLQ, SNS, WebSocket streaming, DynamoDB circuit breaker, X-Ray, Step Functions model routing — built on top of Practice 02's existing infrastructure rather than from scratch | Stages 1-7 built and verified live, everything still running |
 | 04 | [AI-powered support ticket system](./practice-04/) — [build log](./practice-04/SETUP-LOG.md) | Lambda authorizers, Bedrock Prompt Flows, AWS Strands Agents, Bedrock Data Automation, a second Express Step Functions workflow, WebSocket chat, React + Amplify UI, a first pytest suite — built on top of Practice 02/03's infrastructure | Stages 1-16 built and verified live, everything still running |
+| 05 | [Safe & responsible AI assistant](./practice-05/) — [build log](./practice-05/SETUP-LOG.md) | Bedrock Guardrails tuned against a real adversarial corpus, contextual grounding, Comprehend PII masking, a tiered moderation Step Functions workflow (built and deliberately not deployed), jsonschema output validation, a hand-rolled agent tool-use loop, LLM-as-judge fairness evaluation — built on top of Practice 02/04's infrastructure | Stages 0-12 and 14 built and verified live (Stage 13 skipped), everything still running — and unlike practices 02-04, nothing here is a standing/idle cost |
 
 Each practice lives in its own folder — the write-up is that folder's `README.md`, alongside its
 build log, code, and anything else it produced. I'll add `practice-04/` etc. as I go.
@@ -60,5 +61,11 @@ a separate build log with every AWS resource I created and how to tear it down a
 - Bedrock Data Automation for document processing, including a cross-region inference profile that silently routes to a different region than the one in your IAM policy
 - A first React + AWS Amplify UI, replacing the single-static-HTML-file convention for the one practice that specifically asked for a frontend framework
 - A first pytest suite, keeping it to the pure-logic slice that's genuinely testable offline rather than introducing a CI harness this repo doesn't otherwise have
+- Tuning Bedrock Guardrails against a real adversarial test corpus instead of configuring it once and assuming it works — going from 50% to 97% accuracy by root-causing every false positive
+- Proving, not assuming, that safety/PII/grounding classifiers are non-deterministic near their decision thresholds — the same input can get a different verdict on repeated identical calls
+- The difference between a hard content block and a soft PII redaction hiding behind the same "intervened" flag, and what breaks when code doesn't tell them apart
+- Building an agent's tool-use loop by hand when the managed option (Bedrock Agents Classic, then AgentCore) turns out to be blocked for the account or not worth its adoption cost for the task's actual scope
+- Running a fairness evaluation, getting a clean-looking result, and retracting it after applying proper repeated-sampling rigor — the retraction was the real finding
+- SageMaker Model Cards as free, structured governance documentation, including a real AWS API quirk (a newline in JSON content silently fails a "regex" validation check)
 
 — Digvijay Pundir. These are personal learning projects; AWS costs incurred are on me.

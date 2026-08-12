@@ -1,0 +1,221 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "BedrockNovaInvoke",
+            "Effect": "Allow",
+            "Action": [
+                "bedrock:InvokeModel",
+                "bedrock:InvokeModelWithResponseStream"
+            ],
+            "Resource": [
+                "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-micro-v1:0",
+                "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0",
+                "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0"
+            ]
+        },
+        {
+            "Sid": "BedrockKBRetrieve",
+            "Effect": "Allow",
+            "Action": "bedrock:Retrieve",
+            "Resource": "arn:aws:bedrock:us-east-1:156207843797:knowledge-base/LTIWE7M3DC"
+        },
+        {
+            "Sid": "QueryCacheAccess",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem"
+            ],
+            "Resource": "arn:aws:dynamodb:us-east-1:156207843797:table/RagQueryCache"
+        },
+        {
+            "Sid": "StepFunctionsInvoke",
+            "Effect": "Allow",
+            "Action": [
+                "states:StartExecution",
+                "states:DescribeExecution"
+            ],
+            "Resource": [
+                "arn:aws:states:us-east-1:156207843797:stateMachine:rag-query-workflow",
+                "arn:aws:states:us-east-1:156207843797:execution:rag-query-workflow:*"
+            ]
+        },
+        {
+            "Sid": "DocMetadataAccess",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem"
+            ],
+            "Resource": "arn:aws:dynamodb:us-east-1:156207843797:table/RagDocumentMetadata"
+        },
+        {
+            "Sid": "S3ListDocs",
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::rag-assistant-docs-dig-003",
+            "Condition": {
+                "StringLike": {
+                    "s3:prefix": "raw-docs/*"
+                }
+            }
+        },
+        {
+            "Sid": "BedrockStartSync",
+            "Effect": "Allow",
+            "Action": "bedrock:StartIngestionJob",
+            "Resource": "arn:aws:bedrock:us-east-1:156207843797:knowledge-base/LTIWE7M3DC"
+        },
+        {
+            "Sid": "WebSocketManageConnections",
+            "Effect": "Allow",
+            "Action": "execute-api:ManageConnections",
+            "Resource": "arn:aws:execute-api:us-east-1:156207843797:tbex2czo8h/prod/POST/@connections/*"
+        },
+        {
+            "Sid": "CircuitBreakerAccess",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem"
+            ],
+            "Resource": "arn:aws:dynamodb:us-east-1:156207843797:table/ModelCircuitBreaker"
+        },
+        {
+            "Sid": "XRayWrite",
+            "Effect": "Allow",
+            "Action": [
+                "xray:PutTraceSegments",
+                "xray:PutTelemetryRecords"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "SQSProducerConsumerAccess",
+            "Effect": "Allow",
+            "Action": [
+                "sqs:SendMessage",
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes"
+            ],
+            "Resource": "arn:aws:sqs:us-east-1:156207843797:document-analysis-queue"
+        },
+        {
+            "Sid": "SNSPublish",
+            "Effect": "Allow",
+            "Action": "sns:Publish",
+            "Resource": "arn:aws:sns:us-east-1:156207843797:document-analysis-notifications"
+        },
+        {
+            "Sid": "AnalysisResultsReadWrite",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject"
+            ],
+            "Resource": "arn:aws:s3:::rag-assistant-docs-dig-003/analysis-results/*"
+        },
+        {
+            "Sid": "RoutingMetricsWrite",
+            "Effect": "Allow",
+            "Action": "dynamodb:PutItem",
+            "Resource": "arn:aws:dynamodb:us-east-1:156207843797:table/RoutingMetrics"
+        },
+        {
+            "Sid": "DocumentRoutingWorkflowInvoke",
+            "Effect": "Allow",
+            "Action": "states:StartSyncExecution",
+            "Resource": "arn:aws:states:us-east-1:156207843797:stateMachine:document-routing-workflow"
+        },
+        {
+            "Sid": "AnalysisResultsList",
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::rag-assistant-docs-dig-003",
+            "Condition": {
+                "StringLike": {
+                    "s3:prefix": "analysis-results/*"
+                }
+            }
+        },
+        {
+            "Sid": "SupportTicketsAccess",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem"
+            ],
+            "Resource": "arn:aws:dynamodb:us-east-1:156207843797:table/SupportTickets"
+        },
+        {
+            "Sid": "BedrockFlowExecution",
+            "Effect": "Allow",
+            "Action": [
+                "bedrock:StartFlowExecution",
+                "bedrock:GetFlowExecution",
+                "bedrock:ListFlowExecutionEvents",
+                "bedrock:StopFlowExecution"
+            ],
+            "Resource": [
+                "arn:aws:bedrock:us-east-1:156207843797:flow/KGO3XOMZI5",
+                "arn:aws:bedrock:us-east-1:156207843797:flow/KGO3XOMZI5/alias/LR18LJ7QK1",
+                "arn:aws:bedrock:us-east-1:156207843797:flow/KGO3XOMZI5/alias/LR18LJ7QK1/execution/*"
+            ]
+        },
+        {
+            "Sid": "SupportTicketWorkflowInvoke",
+            "Effect": "Allow",
+            "Action": "states:StartSyncExecution",
+            "Resource": "arn:aws:states:us-east-1:156207843797:stateMachine:support-ticket-workflow"
+        },
+        {
+            "Sid": "BedrockDataAutomationAccess",
+            "Effect": "Allow",
+            "Action": [
+                "bedrock:InvokeDataAutomationAsync",
+                "bedrock:GetDataAutomationStatus"
+            ],
+            "Resource": [
+                "arn:aws:bedrock:us-east-1:156207843797:data-automation-project/72054d4e2bd6",
+                "arn:aws:bedrock:*:156207843797:data-automation-profile/us.data-automation-v1",
+                "arn:aws:bedrock:*:156207843797:data-automation-invocation/*"
+            ]
+        },
+        {
+            "Sid": "FeedbackDataAccess",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::rag-assistant-docs-dig-003/feedback-raw/*",
+                "arn:aws:s3:::rag-assistant-docs-dig-003/feedback-results/*"
+            ]
+        },
+        {
+            "Sid": "FeedbackDataList",
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::rag-assistant-docs-dig-003",
+            "Condition": {
+                "StringLike": {
+                    "s3:prefix": [
+                        "feedback-raw/*",
+                        "feedback-results/*"
+                    ]
+                }
+            }
+        },
+        {
+            "Sid": "BedrockApplyGuardrail",
+            "Effect": "Allow",
+            "Action": "bedrock:ApplyGuardrail",
+            "Resource": "arn:aws:bedrock:us-east-1:156207843797:guardrail/5jk3sefhtv16"
+        }
+    ]
+}

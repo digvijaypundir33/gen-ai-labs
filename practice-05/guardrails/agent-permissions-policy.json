@@ -1,0 +1,29 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AgentInvokeModel",
+      "Effect": "Allow",
+      "Action": "bedrock:InvokeModel",
+      "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0"
+    },
+    {
+      "Sid": "AgentKBRetrieve",
+      "Effect": "Allow",
+      "Action": "bedrock:Retrieve",
+      "Resource": "arn:aws:bedrock:us-east-1:156207843797:knowledge-base/LTIWE7M3DC"
+    },
+    {
+      "Sid": "AgentInvokeActionLambda",
+      "Effect": "Allow",
+      "Action": "lambda:InvokeFunction",
+      "Resource": "arn:aws:lambda:us-east-1:156207843797:function:crm-agent-actions"
+    },
+    {
+      "Sid": "AgentApplyGuardrail",
+      "Effect": "Allow",
+      "Action": "bedrock:ApplyGuardrail",
+      "Resource": "arn:aws:bedrock:us-east-1:156207843797:guardrail/5jk3sefhtv16"
+    }
+  ]
+}

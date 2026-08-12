@@ -1,0 +1,22 @@
+=== Component latency (mean of 5 calls, seconds) ===
+
+apply_guardrail (standalone INPUT check):  0.655s (+/-0.227)
+converse WITHOUT guardrailConfig (baseline generation): 1.191s (+/-0.257)
+converse WITH guardrailConfig (content safety + grounding): 1.475s (+/-0.175)
+  -> inline guardrail overhead: +0.284s
+
+moderation-risk-check Lambda (detect_sentiment + detect_pii_entities, combined): 1.076s (+/-0.160)
+
+=== Per-request totals for the two LIVE paths ===
+
+/ask (generate Lambda): apply_guardrail INPUT (0.655s) + converse-with-guardrail (1.475s) = 2.130s guardrail-touching total
+  guardrail-attributable overhead vs a guardrail-free baseline: 0.939s
+
+/tickets (ticket-submit + ticket-generate-response): ~2x Comprehend PII mask (~1.076s each, approximated) + 2x apply_guardrail (0.655s each) = ~3.463s guardrail-attributable overhead
+
+=== Estimated $ cost per request (list pricing, us-east-1) ===
+
+/ask: ~$0.001900 per request (guardrail text-unit charges only, excludes model tokens)
+/tickets: ~$0.000900 per request ($0.000600 Comprehend PII + $0.000300 Guardrail apply_guardrail x2)
+
+Note: pricing figures are AWS list prices as of this session, not verified against Cost Explorer billing data (too little elapsed time for billing data to post) - treat as an estimate, not an invoice.

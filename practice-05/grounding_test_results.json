@@ -1,0 +1,77 @@
+{
+  "test_questions_results": [
+    {
+      "question": "What is the default total concurrency limit for Lambda functions in an AWS account?",
+      "guardrail_action": "none",
+      "answer": "The default total concurrency limit for Lambda functions in an AWS account is 1,000 units of concurrency. This limit applies at the account level and "
+    },
+    {
+      "question": "What are the two phases an execution environment goes through when handling a Lambda request?",
+      "guardrail_action": "converse_ungrounded_intervened",
+      "answer": "I'm not able to provide that response. Please rephrase your question or contact support for further assistance."
+    },
+    {
+      "question": "Does the S3 SOAP API support S3 Versioning?",
+      "guardrail_action": "none",
+      "answer": "The S3 SOAP API does not support S3 Versioning. [Source 1] \n\nHere is the relevant excerpt from the source material:\n\n> **Note** The SOAP API does not "
+    },
+    {
+      "question": "Is S3 Versioning turned on by default when you create a bucket?",
+      "guardrail_action": "none",
+      "answer": "No, S3 Versioning is not turned on by default when you create a bucket. By default, S3 Versioning is disabled on buckets, and you must explicitly enab"
+    },
+    {
+      "question": "How many times in a 24-hour window can you switch a DynamoDB table from provisioned to on-demand capacity mode?",
+      "guardrail_action": "none",
+      "answer": "You can switch a DynamoDB table from provisioned capacity mode to on-demand capacity mode up to four times in a 24-hour rolling window. [Source 1]"
+    },
+    {
+      "question": "What does one write request unit represent in DynamoDB on-demand mode?",
+      "guardrail_action": "none",
+      "answer": "In DynamoDB on-demand mode, one write request unit represents one write operation per second for an item up to 1 KB in size. [Source 1]"
+    },
+    {
+      "question": "What are the two types of Amazon Bedrock Knowledge Bases?",
+      "guardrail_action": "converse_ungrounded_intervened",
+      "answer": "I'm not able to provide that response. Please rephrase your question or contact support for further assistance."
+    },
+    {
+      "question": "What file extension must Step Functions state machine definitions use when written outside the console?",
+      "guardrail_action": "none",
+      "answer": "When defining Step Functions state machine definitions outside the AWS Step Functions console, such as in an editor of your choice, you must save your"
+    },
+    {
+      "question": "What is the default cache TTL, in seconds, for API Gateway response caching?",
+      "guardrail_action": "none",
+      "answer": "The default cache Time-To-Live (TTL) for API Gateway response caching is 300 seconds. [Source 1]"
+    },
+    {
+      "question": "Which HTTP methods have caching enabled by default when you turn on caching for an API Gateway stage?",
+      "guardrail_action": "none",
+      "answer": "When you enable caching for an API Gateway stage, only `GET` methods have caching enabled by default. This is to ensure the safety and availability of"
+    }
+  ],
+  "ungrounded_count": 2,
+  "hallucination_probe": {
+    "query": "What is the exact millisecond value of Lambda SnapStart's cold start improvement, as stated in the documentation?",
+    "response": {
+      "query": "What is the exact millisecond value of Lambda SnapStart's cold start improvement, as stated in the documentation?",
+      "answer": "The provided documentation does not specify an exact millisecond value for the cold start improvement provided by Lambda SnapStart. Instead, it mentions that SnapStart uses cached snapshots of your execution environment to significantly improve startup performance. [Source 1] \n\nHowever, it is worth noting that SnapStart is designed to mitigate cold start issues without incurring additional charges, unlike provisioned concurrency. For more detailed information about SnapStart features, limitations, and supported Regions, you can refer to the [Improving startup performance with Lambda SnapStart](snapstart.md) documentation. [Source 1]",
+      "sources": [
+        {
+          "doc": "lambda-concurrency.md",
+          "uri": "s3://rag-assistant-docs-dig-003/raw-docs/lambda-concurrency.md"
+        },
+        {
+          "doc": "lambda-concurrency.md",
+          "uri": "s3://rag-assistant-docs-dig-003/raw-docs/lambda-concurrency.md"
+        },
+        {
+          "doc": "lambda-concurrency.md",
+          "uri": "s3://rag-assistant-docs-dig-003/raw-docs/lambda-concurrency.md"
+        }
+      ],
+      "guardrail_action": "none"
+    }
+  }
+}

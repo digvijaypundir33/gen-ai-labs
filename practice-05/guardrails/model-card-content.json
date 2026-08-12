@@ -1,0 +1,81 @@
+{
+  "model_overview": {
+    "model_creator": "Digvijay Pundir",
+    "model_name": "rag-assistant-support-system",
+    "model_description": "AWS technical documentation RAG assistant and support ticket triage system. Retrieval over an Amazon Bedrock Knowledge Base (S3-backed AWS docs corpus), reranking, generation, and ticket classification/response, all wrapped in a Bedrock Guardrails-based defense-in-depth layer (content filtering, PII protection, prompt-attack detection, contextual grounding). Not a custom-trained model - built entirely on managed Amazon Bedrock foundation models.",
+    "model_version": 1,
+    "problem_type": "Retrieval-Augmented Generation, ticket classification, and response generation",
+    "algorithm_type": "Pre-trained large language models via Amazon Bedrock (no custom training)",
+    "model_id": "amazon.nova-lite-v1:0 (generation, classification, reranking); amazon.titan-embed-text-v2:0 (Knowledge Base embeddings)"
+  },
+  "intended_uses": {
+    "purpose_of_model": "Answer questions about AWS technical documentation using retrieval-augmented generation, and triage/respond to customer support tickets for a technical product.",
+    "intended_uses": "Internal technical support: AWS documentation Q&A, support ticket classification (category/urgency) and first-draft response generation for human review.",
+    "factors_affecting_model_efficiency": "Retrieval quality depends on Knowledge Base corpus coverage - questions outside the indexed AWS docs will correctly return low-confidence or refuse to answer rather than hallucinate, most of the time (see grounding evaluation below for the documented exception rate). Guardrail-based safety and grounding checks add variable latency (roughly 0.7-1.3s of guardrail-attributable overhead per request, measured in Stage 9) and are probabilistic, not deterministic - see risk rating explanation.",
+    "risk_rating": "Medium",
+    "explanations_for_risk_rating": "Not used for autonomous high-stakes decisions - ticket priority updates are reversible and support responses are intended for human-in-the-loop review, and denied-topic guardrails explicitly block financial/legal advice generation. Rated Medium rather than Low because: (1) the system processes user-submitted free text that may contain PII, (2) safety-relevant guardrail classifiers (prompt-attack detection, contextual grounding, PII detection) were empirically proven non-deterministic - repeated identical requests can receive different safety verdicts, documented with real measured data rather than assumed, (3) the WebSocket streaming interface has a proven, only-partially-mitigated content-exposure gap: guardrail verdicts on generated text are only knowable after content has already streamed to the client."
+  },
+  "evaluation_details": [
+    {
+      "name": "Guardrail accuracy (Stage 3)",
+      "evaluation_observation": "30-prompt adversarial + benign test corpus against the production Bedrock Guardrail (content filters, denied topics, PII, prompt-attack, contextual grounding). Iteratively tuned from an initial 50% accuracy (15 false positives) to 97% accuracy (1 residual false positive) by root-causing each failure: an assignment-inherited word filter mismatched to this domain, an over-instructional RAG prompt template triggering the prompt-attack filter, and one genuine, undismissable tradeoff (the filter correctly recognizing 'Act as X' persona framing as jailbreak-shaped, even when used benignly).",
+      "metric_groups": [
+        {
+          "name": "Guardrail classification accuracy",
+          "metric_data": [
+            { "name": "accuracy", "type": "number", "value": 0.97 },
+            { "name": "adversarial_recall", "type": "number", "value": 1.0 },
+            { "name": "false_positive_count_of_30", "type": "number", "value": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Contextual grounding / hallucination detection (Stages 7, 9, 11)",
+      "evaluation_observation": "Contextual grounding correctly identified a fabricated response (a hallucinated Lambda SnapStart cold-start figure with an invented citation, unsupported by any retrieved document) in 4 of 5 identical repeated trials. Critically, repeated-trial testing on identical inputs (same query, same retrieved content, same model call) also proved the grounding filter's score is itself non-deterministic - one benign, well-supported answer scored between 0.30 and 0.72 across 6 identical calls against a fixed 0.75 threshold. This is a genuine limitation of the underlying classifier, not a configuration or prompt-engineering defect.",
+      "metric_groups": [
+        {
+          "name": "Grounding filter behavior",
+          "metric_data": [
+            { "name": "hallucination_catch_rate_of_5_trials", "type": "number", "value": 0.8 },
+            { "name": "score_variance_observed_min", "type": "number", "value": 0.3 },
+            { "name": "score_variance_observed_max", "type": "number", "value": 0.72 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Fairness evaluation methodology check (Stage 12)",
+      "evaluation_observation": "An initial n=1-per-condition LLM-as-judge fairness eval (3 support-ticket scenarios x 5 writing-style personas) appeared to show a consistent, reproducible bias: casual/non-native-English phrasing was classified as higher urgency and received less thorough responses than formal phrasing, identically across all 3 scenarios. A rigorous repeated-sampling follow-up (n=5-6 independent trials per condition, with response quality scored independently against a fixed rubric rather than via a single comparative judge call) found NO significant difference in either metric - both original claims were retracted. The real finding is methodological: a naive single-sample LLM-as-judge fairness audit produces a convincing but false result; fairness claims from this kind of evaluation require the same repeated-sampling rigor as any other noisy classifier metric.",
+      "metric_groups": [
+        {
+          "name": "Retracted single-sample finding vs repeated-sampling retest",
+          "metric_data": [
+            { "name": "initial_eval_n_per_condition", "type": "number", "value": 1 },
+            { "name": "retest_n_per_condition", "type": "number", "value": 5 },
+            { "name": "urgency_bias_confirmed", "type": "string", "value": "No - retracted" },
+            { "name": "thoroughness_bias_confirmed", "type": "string", "value": "No - retracted" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tiered content-moderation workflow (Stage 6) - evaluated, not deployed",
+      "evaluation_observation": "A Comprehend-sentiment-based tiered moderation Step Functions workflow (cheap first-pass risk scoring, escalating to an LLM moderator only on elevated risk) was built and measured as a cost-comparison exercise against the production Bedrock Guardrail. It reduced LLM moderation calls by 77% versus moderating every request, but missed 67% (8 of 12) of adversarial prompts entirely, because sentiment analysis measures emotional tone, not content harm - calmly-phrased policy violations (violence content, denied-topic requests) scored as low-risk and skipped escalation. The same adversarial prompts are caught with 100% recall by the production Guardrail. This workflow is intentionally NOT wired into the live request path.",
+      "metric_groups": [
+        {
+          "name": "Tiered moderation vs production guardrail",
+          "metric_data": [
+            { "name": "cost_reduction_vs_always_moderate", "type": "number", "value": 0.77 },
+            { "name": "adversarial_recall", "type": "number", "value": 0.33 },
+            { "name": "production_guardrail_adversarial_recall_same_prompts", "type": "number", "value": 1.0 }
+          ]
+        }
+      ]
+    }
+  ],
+  "additional_information": {
+    "ethical_considerations": "(1) Safety-relevant guardrail classifiers (prompt-attack detection, PII detection, contextual grounding) were empirically proven non-deterministic across identical repeated requests - a single pass/fail verdict is not a reproducible guarantee, and this should inform any compliance or audit use of guardrail logs. (2) The WebSocket streaming interface can expose partial, not-yet-verdicted generated content to users before a safety/grounding check completes; a client-side retraction signal was added to clean up the display, but does not retroactively prevent the brief exposure - only a fully-buffered non-streaming response can guarantee that, at the cost of perceived latency. (3) PII masking (Amazon Comprehend, applied before data-at-rest writes) and Bedrock Guardrails' PII policy are two independent, only partially-overlapping mechanisms - Bedrock's guardrail was empirically found to never scan the INPUT side for sensitive information in this system's testing, meaning storage-layer PII protection cannot be assumed to come from the generation-layer guardrail alone. (4) LLM-as-judge evaluation (used for the fairness check) is judging one model's output with another model, inheriting that judge model's own potential blind spots, and is highly sensitive to sample size - see the fairness evaluation retraction above.",
+    "caveats_and_recommendations": "Do not treat a single guardrail pass/fail verdict as a reproducible, audit-grade guarantee for content near a decision threshold - if a compliance use case requires reproducibility, use repeated-sampling/majority-vote scoring rather than a single call. Do not deploy the Comprehend-sentiment-based tiered moderation workflow as a primary content safety filter - it was evaluated specifically to demonstrate why sentiment analysis is the wrong signal for harm detection (67% recall gap on adversarial content), and exists in this system only as a documented cost/architecture comparison. Any future fairness or bias evaluation on this system should use repeated sampling (n>=5 per condition) and independent (non-comparative) scoring rubrics from the outset, given how convincingly a single-sample evaluation reproduced a false result across multiple scenarios in Stage 12."
+  }
+}

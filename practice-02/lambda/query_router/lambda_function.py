@@ -5,24 +5,49 @@ import time
 import boto3
 
 bedrock_runtime = boto3.client("bedrock-runtime")
+comprehend = boto3.client("comprehend")
 dynamodb = boto3.resource("dynamodb")
 cache_table = dynamodb.Table("RagQueryCache")
 
 CACHE_TTL_SECONDS = 3600
 CLASSIFY_MODEL = "amazon.nova-lite-v1:0"
+MIN_PII_SCORE = 0.5
 
 
 def compute_query_hash(query):
     return hashlib.sha256(query.strip().lower().encode()).hexdigest()
 
 
+def mask_pii(text):
+    """The cached result blob embeds the raw query text verbatim. Bedrock's
+    Guardrail input-side check (generate Lambda) never actually redacts PII
+    from the query - confirmed live, sensitive-information scanning only
+    fires on the OUTPUT side - so without this, PII typed into a query would
+    sit in RagQueryCache in plaintext for the cache's full TTL.
+    """
+    if not text:
+        return text
+    entities = comprehend.detect_pii_entities(Text=text, LanguageCode="en")["Entities"]
+    entities = [e for e in entities if e["Score"] >= MIN_PII_SCORE]
+    if not entities:
+        return text
+    masked = text
+    for entity in sorted(entities, key=lambda e: e["BeginOffset"], reverse=True):
+        begin, end = entity["BeginOffset"], entity["EndOffset"]
+        masked = masked[:begin] + f"[{entity['Type']}]" + masked[end:]
+    return masked
+
+
 def lambda_handler(event, context):
     action = event.get("action", "check")
 
     if action == "write":
+        cached_result = dict(event["result"])
+        if cached_result.get("query"):
+            cached_result["query"] = mask_pii(cached_result["query"])
         cache_table.put_item(Item={
             "query_hash": event["queryHash"],
-            "result": json.dumps(event["result"]),
+            "result": json.dumps(cached_result),
             "expires_at": int(time.time()) + CACHE_TTL_SECONDS,
         })
         return event["result"]

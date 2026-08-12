@@ -1,0 +1,53 @@
+{
+  "Comment": "Tiered moderation: cheap Comprehend risk check first, LLM moderation only escalated on MEDIUM/HIGH risk. Fixes the reference assignment's CDK bug of reusing one ModerateContent state as the .next() target of two different Choice branches (invalid ASL graph) - both MEDIUM and HIGH route into the SAME ModerateContent state here, which has one shared downstream Choice.",
+  "StartAt": "AnalyzeContent",
+  "States": {
+    "AnalyzeContent": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:156207843797:function:moderation-risk-check",
+      "Next": "NeedsFurtherModeration"
+    },
+    "NeedsFurtherModeration": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.risk_level",
+          "StringEquals": "HIGH",
+          "Next": "ModerateContent"
+        },
+        {
+          "Variable": "$.risk_level",
+          "StringEquals": "MEDIUM",
+          "Next": "ModerateContent"
+        }
+      ],
+      "Default": "ApproveContent"
+    },
+    "ModerateContent": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:156207843797:function:moderation-llm-check",
+      "Next": "ModerationDecision"
+    },
+    "ModerationDecision": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.is_approved",
+          "BooleanEquals": true,
+          "Next": "ApproveContent"
+        }
+      ],
+      "Default": "RejectContent"
+    },
+    "ApproveContent": {
+      "Type": "Pass",
+      "Result": { "status": "approved" },
+      "End": true
+    },
+    "RejectContent": {
+      "Type": "Pass",
+      "Result": { "status": "rejected" },
+      "End": true
+    }
+  }
+}

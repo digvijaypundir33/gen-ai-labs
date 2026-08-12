@@ -1,0 +1,46 @@
+{
+  "baseline": [
+    {
+      "thoroughness_score": 6,
+      "criteria_covered": 3
+    },
+    {
+      "thoroughness_score": 7,
+      "criteria_covered": 4
+    },
+    {
+      "thoroughness_score": 7,
+      "criteria_covered": 4
+    },
+    {
+      "thoroughness_score": 7,
+      "criteria_covered": 3
+    },
+    {
+      "thoroughness_score": 6,
+      "criteria_covered": 3
+    }
+  ],
+  "casual": [
+    {
+      "thoroughness_score": 6,
+      "criteria_covered": 3
+    },
+    {
+      "thoroughness_score": 7,
+      "criteria_covered": 3
+    },
+    {
+      "thoroughness_score": 7,
+      "criteria_covered": 4
+    },
+    {
+      "thoroughness_score": 8,
+      "criteria_covered": 3
+    },
+    {
+      "thoroughness_score": 8,
+      "criteria_covered": 4
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "name": "rag-assistant-guardrail",
+  "description": "Practice 05 defense-in-depth guardrail: content filtering, denied topics, PII protection, prompt-attack detection, contextual grounding.",
+  "topicPolicyConfig": {
+    "topicsConfig": [
+      {
+        "name": "Legal_Advice",
+        "definition": "Providing legal advice, compliance guarantees, or legal interpretations about a customer's AWS usage, contracts, or liability.",
+        "examples": [
+          "Am I legally liable if my S3 bucket leaks customer data?",
+          "Does using this AWS service make my company GDPR compliant?",
+          "Can you review this contract clause for legal risk?"
+        ],
+        "type": "DENY"
+      },
+      {
+        "name": "Financial_Advice",
+        "definition": "Providing personalized financial or investment advice, including guarantees about cost savings or return on investment from specific AWS purchasing decisions.",
+        "examples": [
+          "Should I buy AWS stock?",
+          "Should I commit to a 3-year Reserved Instance to maximize my portfolio returns?",
+          "Guarantee me a specific dollar amount of savings if I switch to Savings Plans."
+        ],
+        "type": "DENY"
+      }
+    ]
+  },
+  "contentPolicyConfig": {
+    "filtersConfig": [
+      { "type": "HATE", "inputStrength": "HIGH", "outputStrength": "HIGH" },
+      { "type": "INSULTS", "inputStrength": "HIGH", "outputStrength": "HIGH" },
+      { "type": "SEXUAL", "inputStrength": "HIGH", "outputStrength": "HIGH" },
+      { "type": "VIOLENCE", "inputStrength": "HIGH", "outputStrength": "HIGH" },
+      { "type": "MISCONDUCT", "inputStrength": "HIGH", "outputStrength": "HIGH" },
+      { "type": "PROMPT_ATTACK", "inputStrength": "LOW", "outputStrength": "NONE" }
+    ]
+  },
+  "wordPolicyConfig": {
+    "managedWordListsConfig": [
+      { "type": "PROFANITY" }
+    ]
+  },
+  "sensitiveInformationPolicyConfig": {
+    "piiEntitiesConfig": [
+      { "type": "US_SOCIAL_SECURITY_NUMBER", "action": "ANONYMIZE" },
+      { "type": "CREDIT_DEBIT_CARD_NUMBER", "action": "ANONYMIZE" },
+      { "type": "US_BANK_ACCOUNT_NUMBER", "action": "ANONYMIZE" },
+      { "type": "EMAIL", "action": "ANONYMIZE" },
+      { "type": "PHONE", "action": "ANONYMIZE" },
+      { "type": "NAME", "action": "ANONYMIZE" }
+    ]
+  },
+  "contextualGroundingPolicyConfig": {
+    "filtersConfig": [
+      { "type": "GROUNDING", "threshold": 0.75 },
+      { "type": "RELEVANCE", "threshold": 0.5 }
+    ]
+  },
+  "blockedInputMessaging": "I'm sorry, but I can't help with that request. If you believe this is an error, please contact support directly.",
+  "blockedOutputsMessaging": "I'm not able to provide that response. Please rephrase your question or contact support for further assistance.",
+  "tags": [
+    { "key": "Project", "value": "gen-ai-labs" },
+    { "key": "Practice", "value": "practice-05" }
+  ]
+}
