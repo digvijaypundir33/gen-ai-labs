@@ -84,9 +84,11 @@ only thing to pay for is tokens.
 
 1. **Nova first.** Use Nova Micro or Nova Lite as both the model under test and the judge.
    Per the repo's verified pricing table, Nova Lite costs $0.06/$0.24 per 1M input/output
-   tokens, and Claude Haiku 4.5 costs $1/$5, about 17–20× more. Use Haiku only where the
-   experiment needs a second family of judge models (P10, and possibly P11's model axis), and
-   cap the number of calls.
+   tokens, and Claude Haiku 4.5 costs $1/$5, about 17–20× more. Claude models are
+   **blocked** on this account (an AWS Marketplace `INVALID_PAYMENT_INSTRUMENT` problem, the
+   same one P01 and P02 hit, re-confirmed 2026-11-14). Where an experiment needs a second
+   family of judge models (P07, P10), use **`gpt-oss-120b`** at $0.15/$0.60. Mistral Large
+   also works, but at $4/$12 it costs ~27× more.
 2. **Cache every model call.** Every call goes through one helper that keys on
    `hash(model, prompt, params)` and writes the reply to `results/cache/`. Re-running a report,
    fixing a scorer or re-grading then reads from the cache instead of calling Bedrock again.

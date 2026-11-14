@@ -1,76 +1,301 @@
 # practice-07: Evaluation & QA capstone (Bonus Assignment 01 + Content Domain 5)
 
-Execution plan. **Depends on practice-06 being built first** — see Sequencing below. Work stage by stage; check a stage off before starting the next.
+The step-by-step execution plan. It's the opener of [Series 2](../README.md) and follows its rules:
+- predictions are committed before the first experimental model call;
+- every model call goes through a cache and a call limit;
+- raw results go in `results/`;
+- an offline `tests/` suite;
+- the LinkedIn draft is written last.
 
-> **Now the opener of [Series 2](../README.md).** Paths into Series 1 are `series-1/practice-NN/` from the repo root (`../../series-1/practice-NN/` from here — e.g. `sys.path.insert(0, "../../series-1/practice-02")` to reuse `test_questions.py`). This practice also follows the Series 2 rules: commit a `PREDICTIONS.md` before Stage 1's first model call, keep raw results in `results/`, add an offline `tests/` suite, and write `linkedin-post-draft.md` last. P06 Stage 9 (the rating system Stage 6's feedback side would consume) was deferred and never built — treat user-feedback consumption as out of scope unless Stage 9 gets built first.
+Work stage by stage, and check each stage off before starting the next.
 
-## Context
+**Budget: under $0.50 for the whole practice, and $0 idle afterwards.** Every stage lists its
+own estimate, and the write-up reports the measured cost next to it.
 
-`practice-07/practice-07.md` is the last practice, and it's the evaluation one: Bonus Assignment 01 ("build a complete evaluation system for a customer support chatbot") plus the **Content Domain 5** exam material (Task 5.1 implement evaluation systems, Task 5.2 troubleshoot GenAI applications). No other files exist in `practice-07/` yet.
+Paths into Series 1: `../../series-1/practice-NN/` from here. For example,
+`sys.path.insert(0, "../../series-1/practice-02")` reuses `test_questions.py`.
 
-This repo already has a *lot* of evaluation work scattered across practices — `series-1/practice-01/benchmark_models.py` (multi-model quality/latency/cost benchmark), `series-1/practice-02/retrieval_quality.py` (hit-rate@k, MRR, NDCG across BM25/vector/RRF/rerank), `series-1/practice-02/test_questions.py` (a hand-verified golden set with `expected_doc` + `ground_truth`), and seven separate P05 eval scripts (guardrail corpus, grounding, fairness, confidence, cost comparisons). What it does **not** have is any of that running continuously, persisted anywhere, or gating anything — every eval in this repo is a one-off local script writing a local JSON file. That gap is what practice-07 is actually for.
+## What this practice is for
 
-The single most important finding going in: **the assignment's entire Module 1 is single-pass LLM-as-judge scoring — precisely the methodology practice-05 already proved produces convincing, reproducible-looking, false results** (the Stage 12 fairness retraction). The assignment hands over the exact broken pattern this repo has already documented. That's the headline narrative for this practice, and Stage 3 below is built to demonstrate it rather than just cite it.
+Bonus Assignment 01 (`practice-07.md`) asks for "a complete evaluation system for a customer
+support chatbot", plus the **Content Domain 5** exam tasks: 5.1 implement evaluation systems,
+and 5.2 troubleshoot GenAI applications.
 
-### Defects in the assignment's reference code (document these, don't reproduce them)
+Series 1 already has plenty of evaluation code, but every piece is a one-off local script
+writing a local JSON file. Nothing is repeated, stored, or used to gate anything. That gap is
+what this practice fills.
 
-Consistent with this repo's convention of reviewing the shipped reference code:
-- **Truncated / non-functional**: `_calculate_efficiency_metrics` ends in a bare `return` (line 685); `_rank_models` is called (line 578) but never defined anywhere.
-- **Doc structure leaked into code**: the string `"Step 2: Provide only the JSON response..."` is embedded mid-prompt-literal (line 212) — the markdown's own step numbering ended up inside the Python.
-- **Broken entrypoints**: `if name == "main"` (lines 302, 465) instead of `if __name__ == "__main__"`.
-- **Broken method binding**: `_extract_json_from_text` is defined at module level (lines 215, 412) but called as `self._extract_json_from_text` — would `AttributeError` at runtime.
-- **Dead model IDs again**: `anthropic.claude-3-sonnet-20240229-v1:0`, `claude-instant-v1`, `claude-v2`, `amazon.titan-text-express-v1` — same stale set as practice-06's spec, all confirmed retired/unused in this account.
-- **Crude token estimation**: `len(query.split()) * 1.3` for token counts, when `converse()` returns real `usage` figures for free and `ticket-submit` already does real `tiktoken` BPE counting.
-- **Architecture diagram promises four pillars** (Quality Assessment, Model Comparison, User Feedback, Retrieval Evaluation) plus an Evaluation Database and Reporting Dashboard — but only Modules 1 and 2 have any code. User Feedback, Retrieval Evaluation, the database, and the dashboard are diagram-only.
+**The headline going in:** the assignment's Module 1 is single-pass LLM-as-judge scoring. P05
+already showed that method producing a convincing, reproducible-looking and *false* result: the
+fairness retraction. So this practice runs the assignment's n=1 judge next to an n=5 one and
+reports how far apart they land.
 
-## Decisions made
+## Already covered in Series 1 (reuse, don't rebuild)
 
-1. **Sequencing**: build practice-06 fully first, then practice-07. P07's eval framework then has real metrics and P06's rating system to work against, and nothing gets built twice.
-2. **Scope**: deep on genuine gaps, not broad-and-thin. Document the already-covered areas as covered (with pointers), rather than rebuilding them for exam-surface completeness.
-3. **Judge rigor**: build the quality evaluator with repeated sampling (n≥5) from the outset, **and** run the assignment's n=1 version alongside it to show the divergence concretely.
+- **Golden set:** `series-1/practice-02/test_questions.py`. It has 10 questions, each with
+  `expected_doc` and `ground_truth`, hand-verified against the corpus.
+- **Multi-model benchmark (Module 2):** `series-1/practice-01/benchmark_models.py`. Its
+  word-overlap similarity is the hand-rolled score that Stage 4 compares against the managed
+  service.
+- **Retrieval quality:** `series-1/practice-02/retrieval_quality.py` computes hit-rate@k, MRR
+  and NDCG across four strategies. That's more than the assignment asks for, so it is not
+  rebuilt.
+- **Tiered generation:** P06's `tier` override on `generate`'s direct-invoke path. Stage 8
+  uses it to cause a regression deliberately, without changing any deployed code.
 
-## Audit: P07 asks vs. what already exists
+## Defects in the assignment's reference code (document these, don't reproduce them)
 
-**SKIP — already built, would be a duplicate:**
-- Multi-model comparison framework (Module 2) → `series-1/practice-01/benchmark_models.py` already runs the same query across models and scores weighted quality/latency/cost into `model_selection_strategy.json`. The assignment's `quality_per_token`/`quality_per_second` are a small delta, folded into Stage 2 rather than rebuilt.
-- Retrieval quality testing (relevance scoring, context matching, retrieval latency) → `series-1/practice-02/retrieval_quality.py` already does hit-rate@k, MRR, and NDCG across four retrieval strategies. More thorough than what the assignment asks for.
-- Golden/reference test set → `series-1/practice-02/test_questions.py` already exists, hand-verified against real corpus docs, and is already reused by P05's `guardrail_eval.py` and `grounding_test.py`. Reuse it again here; do not write a new one.
-- LLM-as-judge as a *technique* → already used in P05's fairness work. What's missing is rigor and persistence, not the technique.
-- User feedback / rating system → being built in **practice-06 Stage 9**. P07 consumes it, doesn't rebuild it.
+- **Truncated or non-functional code:** `_calculate_efficiency_metrics` ends in a bare
+  `return` (line 685), and `_rank_models` is called (line 578) but never defined.
+- **Document structure leaked into code:** `"Step 2: Provide only the JSON response..."` sits in
+  the middle of a prompt literal (line 212).
+- **Broken entrypoints:** `if name == "main"` (lines 302 and 465).
+- **Broken method binding:** `_extract_json_from_text` is defined at module level (lines 215
+  and 412) but called as `self._extract_json_from_text`.
+- **Dead model IDs:** `claude-3-sonnet-20240229`, `claude-instant-v1`, `claude-v2` and
+  `titan-text-express-v1`.
+- **Rough token counts:** `len(text.split()) * 1.3`, when `converse()` returns the real
+  `usage` figures for free.
+- **Diagram promises that have no code:** the architecture diagram promises User Feedback,
+  Retrieval Evaluation, an Evaluation Database and a Dashboard. Only Modules 1 and 2 have code.
 
-**BUILD — real gaps:**
+---
 
-- [ ] **Stage 0 — Live audit + availability checks.** Confirm P06's stages landed and are still live (`RagAssistant/Ops` + `RagAssistant/BusinessImpact` namespaces, `SupportTickets` rating attributes, `RoutingMetrics` cost field). Then two genuine unknowns to resolve before planning further: **(a) is Amazon Bedrock Model Evaluations available and usable in this account/region** (P05 hit a hard block on Bedrock Agents Classic, so account-level restrictions are a real, precedented risk here), and **(b) what does a managed evaluation job actually cost** — it bills for the inference it runs, which is a real (if bounded) charge against a repo that has otherwise stayed near-zero idle cost. If either answer is bad, Stage 1 becomes a documented blocked-attempt (the P05 Agents Classic pattern), not a build.
+## Stages
 
-- [ ] **Stage 1 — Amazon Bedrock Model Evaluations (managed) vs. P01's hand-rolled benchmark.** The headline. This repo has never touched the managed evaluation service — P01 hand-rolled `benchmark_models.py` instead. Run a managed automatic evaluation job over the existing `test_questions.py` golden set against the same Nova models P01 benchmarked, then compare: does the managed service's scoring agree with P01's word-overlap similarity proxy? Where do they diverge, and which one is actually right? This is the same managed-vs-hand-rolled comparison the repo has run before (P05: Bedrock Agents → hand-rolled tool loop; P05: managed contextual grounding → its own eval), and the answer is genuinely unknown in advance. **Cost note**: unlike almost everything else in this repo, an evaluation job is not $0-idle — record the real figure.
+### - [x] Stage 0: Live audit and availability checks ($0, done 2026-11-14)
 
-- [ ] **Stage 2 — Six-dimension quality evaluator, built with repeated-sampling rigor.** The assignment's Module 1: score responses on relevance, factual accuracy, consistency, fluency, helpfulness, completeness. Build it against the live `generate` Lambda's real answers over `test_questions.py`, using an **independent per-dimension rubric with n≥5 trials per item** — the exact correction P05's `fairness_thoroughness_check.py` had to apply after the retraction, applied from the start this time. Then **also run the assignment's n=1 single-pass version over the same items** and report both: how far apart are the scores, and would the n=1 run have supported a conclusion the n≥5 run refutes? Fold in Module 2's `quality_per_token`/`quality_per_second` efficiency metrics here, computed from real `converse()` `usage` figures rather than the spec's `len(text.split()) * 1.3` estimate. Use `nova-lite` or `claude-haiku-4-5` as the judge model — never a dead model ID, and note the judge-model choice as a documented variable (a judge inherits its own blind spots, already called out in P05's model card).
+All of this is read-only, except for a handful of one-word "Reply with OK" probe calls costing
+under $0.001 in total.
 
-- [ ] **Stage 3 — Claim-level factual verification + hallucination rate.** The assignment's Task 1.2: decompose a response into individual factual claims, label each `supported` / `contradicted` / `not_mentioned` against retrieved context, and compute accuracy + hallucination scores. Genuinely new — P05 has Bedrock's **managed contextual grounding**, but that returns a single 0–1 score for the whole response, with no indication of *which* claim is unsupported. Run both over the same responses (including P05's known hallucination-prone question, already isolated in `grounding_test.py`) and answer: does claim decomposition catch anything the managed score misses, and is it worth the extra model calls? Apply repeated sampling here too — P05 proved the managed grounding score itself swings between 0.30 and 0.72 on identical inputs, so a single comparison run would be meaningless.
+- **No drift:** the deployed `generate`, `record-metrics`, `analyze`, `support-agent-loop` and
+  `token-anomaly-check` are byte-identical to local source.
+- **P06 landed:** `RagAssistant/Ops` has datapoints from 2026-08-18 (nova-lite 5, nova-pro 2).
+  `RoutingMetrics` has 8 rows, 2 of them with `estimated_cost_usd`. That's expected, because
+  the field is written only when the cost is known. Note that `list-metrics` shows nothing,
+  because it only covers the last 14 days. Query the statistics directly instead.
+- **P06 Stage 9 was never built.** `SupportTickets` (46 rows) has no rating attribute, so
+  user-feedback evaluation is **out of scope**.
+- **Bedrock Model Evaluations:**
+  - The API works in us-east-1 (`list-evaluation-jobs` returns 0 jobs).
+  - Quotas: 1000 prompts per dataset, **1 model per automatic job** (so comparing models takes
+    one job per model), 3 metrics per dataset, and 20 concurrent jobs.
+  - Cost: automatic algorithmic scores are free, and you pay only for generator inference.
+    LLM-as-judge jobs pay the judge's on-demand tokens, and nothing more per job or per metric.
+  - Bring-your-own responses is supported, so Bedrock can judge `generate`'s real answers
+    without calling the model again.
+  - **Not proven yet:** that `create-evaluation-job` is actually allowed for this account.
+    Stage 4a tests that first.
+- **Models:**
 
-- [ ] **Stage 4 — Evaluation results persistence.** Every eval in this repo writes a local JSON file that nothing reads afterwards (`retrieval_quality_results.json`, `fairness_eval_results.json`, `embedding_evaluation_results.json`, …). Add a DynamoDB `EvaluationResults` table keyed by eval run + item, so Stages 1-3's scores become a queryable history instead of point-in-time artifacts. This is the prerequisite for Stage 5 — you cannot regression-test against a baseline you never stored. Keep it on-demand billing, consistent with every other table in this account.
+  | Model | Status |
+  |---|---|
+  | Nova Micro, Nova Lite, Nova Pro | OK |
+  | Nova 2 Lite | OK, but only through the `us.` inference profile |
+  | Mistral Large | OK |
+  | `gpt-oss-120b` | OK |
+  | Claude Haiku 4.5 | **Blocked:** `INVALID_PAYMENT_INSTRUMENT`, the same Marketplace problem P01 and P02 hit |
+  | Llama 3.1 70B | Blocked (legacy) |
+  | Nova Premier | End of life |
 
-- [ ] **Stage 5 — Regression suite + automated quality gate.** The highest-value item after Stage 1, and entirely absent today: P04's pytest suite is pure-logic unit tests (circuit breaker, authorizer, ticket-submit validation) with no output-quality coverage at all. Build a scheduled evaluation run over the golden set — same EventBridge-Rule→Lambda pattern already proven by `rag-assistant-doc-sync-schedule` → `check-and-sync` — that scores current output, compares against the stored Stage 4 baseline, and **fails loudly when quality regresses past a threshold**. This is what turns the repo's scattered one-off evals into an actual quality gate. Decide and document the threshold empirically from Stage 2's observed variance, not by picking a round number — P05's grounding-score variance data is the cautionary example for why an arbitrary fixed threshold misfires.
+  - Nova Lite v1 is **not** a supported Bedrock judge; Nova Micro, Nova 2 Lite and Nova Pro are.
+  - **Second judge family for this series: `gpt-oss-120b` (OpenAI).** Mistral Large works too,
+    and is a supported Bedrock judge. But the Price List API puts it at $4/$12 per 1M tokens,
+    about 67× Nova Lite, against $0.15/$0.60 for `gpt-oss-120b`. Claude is out unless the
+    Marketplace payment problem gets fixed.
+- **AgentCore Evaluations exists** (`bedrock-agentcore-control list-evaluators` returns 32).
+  Whether it can score a plain Lambda Converse loop is checked in Stage 9, from the docs only.
 
-- [ ] **Stage 6 — Agent performance metrics.** Task 5.1's agent-framework bullet: task completion rate, tool-usage effectiveness, reasoning quality across multi-step workflows. `support-agent-loop` already emits a **self-logged trace** of every tool call it makes (built in P05 Stage 10) — the raw material exists and nothing computes anything from it. Score: did the loop reach a real answer or exhaust `MAX_TOOL_ITERATIONS`; were the tools it chose the right ones; how many iterations did it need. Check during Stage 0 whether **Bedrock Agent Evaluations** is usable here — likely not, since this account's agent is a hand-rolled Converse loop rather than a managed Bedrock Agent (P05 found Agents Classic blocked), in which case document *why* the managed option doesn't apply rather than silently hand-rolling.
+### - [x] Stage 1: Evaluation toolkit (offline, $0, done 2026-11-14)
 
-- [ ] **Stage 7 — Task 5.2: troubleshooting methodology write-up.** No build, no AWS spend, high value. Content Domain 5's second task is troubleshooting GenAI applications via systematic layered analysis. This repo has accumulated an unusually good corpus of *real, documented* failures across six practices — a cross-region inference profile silently routing outside its IAM policy, a Lambda Layer broken by a Python-version-dependent transitive dependency, macOS-built wheels failing at runtime, a WebSocket path with zero guardrail coverage sitting next to a fully-covered REST path, an IAM self-escalation restriction, a newline silently failing a "regex" check, and a full fairness-finding retraction. Synthesize these into a layered troubleshooting methodology (which layer to suspect first, what each class of symptom actually indicated) rather than restating the exam bullets abstractly.
+Shared code for this practice and the rest of Series 2. No AWS calls.
 
-**Deliberately out of scope** (recorded as decisions, not oversights — per the "deep on real gaps" scope decision):
-- *Semantic drift detection* — needs a longitudinal baseline that won't exist until Stage 4 has been collecting for a while. Correct follow-up, not buildable now.
-- *Annotation workflows / human-in-the-loop labelling UI* — P06 Stage 9 delivers the rating capture; a full annotation tool is a product, not an eval capability, and would dwarf the rest of this practice.
-- *Reporting dashboard for eval results* — Stage 4's table makes this cheap to add later; P05 Stage 13 already set the precedent of skipping a dashboard when the data is queryable without one.
-- *A/B testing foundation models in production* — the mechanism already exists (P01's AppConfig model-swap without redeploy); running a real production A/B needs traffic this system doesn't have.
+**Done:** 25 tests pass with AWS credentials disabled (`.venv/bin/python -m pytest tests`).
+Two details the tests pin down:
 
-## Cost note
+- The cache key includes a `trial` index. Without it, a five-run judge would get one cached
+  reply back five times and silently become a one-run judge.
+- Replies from `gpt-oss-120b` start with a reasoning block. Taking `content[0]["text"]` returns
+  None, so the toolkit joins all the text blocks instead.
 
-Unlike practices 02-05, this one has a genuinely non-zero cost centre: **Stage 1's managed evaluation job bills for the inference it runs**, and Stages 2-3's repeated-sampling design multiplies model calls by n≥5 on purpose. That's the correct tradeoff for methodological rigor, but it must be measured and reported, not hand-waved — same treatment the README's Cost sections give every other practice. Stage 4's DynamoDB table is on-demand ($0 idle); Stage 5's scheduled Lambda is pay-per-invocation.
+- `evalkit/bedrock.py` is the only way any script calls a model. It provides:
+  - a cache keyed on `hash(model, prompt, params, trial)` in `results/cache/`;
+  - real `usage` capture;
+  - cost from prices read from the AWS Price List API on 2026-11-14 (`evalkit/pricing.py`).
+    Any model without a price entry is flagged, never counted as free;
+  - `--dry-run`, which counts and prices the calls without making them;
+  - `--max-calls`, a hard stop;
+  - the region pinned to `us-east-1`.
+- `evalkit/golden.py` loads P02's `test_questions.py`.
+- `evalkit/stats.py` computes mean, stdev, min and max, Wilson intervals, and agreement between
+  two scorers.
+- `tests/` checks the cache key, the cost maths, the stats and the call limit with pytest, all
+  offline.
+- **Done when:** `pytest` passes with no credentials.
 
-## Verification
+### - [ ] Stage 2: Predictions (commit on its own, $0)
 
-- Stage 1: confirm the managed evaluation job completes and its output is retrievable; report the real dollar cost and the agreement/divergence vs. `benchmark_models.py`'s ranking.
-- Stages 2-3: both the n≥5 and n=1 runs must be reported together — the comparison *is* the finding. Report score distributions (min/max/stdev), never a single number.
-- Stage 4: query the table back after a run and confirm results are retrievable by eval-run ID.
-- Stage 5: deliberately regress something (e.g. point `generate` at `nova-micro` with a low maxTokens) and confirm the gate actually fails — an untriggered gate is not a verified gate.
-- Stage 6: run several agent queries of differing complexity and confirm the computed completion/tool-use metrics match what the traces actually show.
-- Write up `practice-07/README.md` and `practice-07/SETUP-LOG.md` following practice-05's structure (stage-by-stage narrative + resource table with cost/teardown columns), including any blocked-attempt stages documented as real findings.
+Write `PREDICTIONS.md` and commit it **before** Stage 3's first model call. For each question:
+what I expect, and what result would prove me wrong. The questions to commit to:
+
+1. Do Bedrock's managed Q&A scores (F1) rank Nova Micro and Nova Lite the same way P01's
+   word-overlap proxy did?
+2. Does the managed judge's *Correctness* score agree with my own judge on which answers are
+   wrong?
+3. How far apart are the n=1 and n=5 judge scores, and does any conclusion flip?
+4. Does splitting answers into individual claims catch a hallucination that the managed
+   grounding score passes?
+5. Will the quality gate fail on the deliberately degraded configuration (Nova Micro, low
+   `maxTokens`), and pass on the normal one?
+
+### - [ ] Stage 3: Collect responses once (~$0.01)
+
+Call the live `generate` Lambda (direct invoke) on the 10 golden questions × 3 runs = 30 calls.
+Store each answer with its retrieved context, model, `usage` and latency in
+`results/responses.jsonl`. **Every later stage reads these files** rather than generating new
+answers.
+
+### - [ ] Stage 4: Managed Bedrock evaluation vs. P01's hand-rolled benchmark (~$0.05)
+
+- **4a, setup and a test job:**
+  - Create the IAM role `rag-assistant-eval-role`: trusted by `bedrock.amazonaws.com`, scoped
+    to the evaluation job ARN, with S3 read/write on the `eval/` prefix only and
+    `InvokeModel` on Nova only.
+  - Store the data under the `eval/` prefix in the existing `rag-assistant-docs-dig-003`
+    bucket.
+  - Then run a **one-prompt test job**. If it's refused at account level, Stage 4 becomes a
+    documented blocked attempt, as with P05's Agents Classic, and the rest of this stage is
+    skipped.
+- **4b, programmatic Q&A jobs:** a 10-prompt custom dataset (`prompt`, and `referenceResponse`
+  set to `ground_truth`). One job for Nova Micro, one for Nova Lite. Metrics: accuracy (F1),
+  robustness and toxicity. There's no judge, so you pay only for 20 generator calls.
+- **4c, LLM-as-judge job on Stage 3's answers (bring your own responses):** Nova Micro judges
+  Correctness, Completeness and Faithfulness, the most the 3-metrics-per-dataset limit allows.
+- **4d, compare:** managed F1 against P01's word-overlap ranking, and the managed judge against
+  Stage 5's own judge. Where they disagree, read the answer and decide by hand which scorer was
+  right.
+
+### - [ ] Stage 5: Six-dimension judge, n=5 vs. the assignment's n=1 (~$0.10)
+
+- **Dimensions** (from the assignment): relevance, factual accuracy, consistency, fluency,
+  helpfulness, completeness.
+- **One independent rubric per dimension.** The judge returns a 1–5 integer and a one-line
+  reason, as short JSON with `maxTokens` capped.
+- **Runs:**
+  - 10 answers × 6 dimensions × 5 runs with Nova Micro = 300 calls.
+  - The same 10 answers × 6 dimensions × 1 run, which reproduces the assignment's method.
+  - `gpt-oss-120b` on the same 10 × 6 × 5, as the second judge family. It's cheap enough to
+    run in full, which allows the comparison that matters: is the gap *between* the two
+    judges bigger than either judge's own spread from run to run?
+- **Report distributions, never single numbers.** The finding is how often the n=1 score falls
+  outside the n=5 range, and whether any ranking flips.
+- **Efficiency metrics** (Module 2): `quality_per_token` and `quality_per_second`, from real
+  `usage` and latency.
+
+### - [ ] Stage 6: Claim-level hallucination checks vs. managed grounding (~$0.10)
+
+- **Claim checks:** split each answer into individual claims, then label each one *supported*,
+  *contradicted* or *not mentioned* against the retrieved context. Run this 3 times, and
+  compute an accuracy and hallucination rate.
+- **Managed baseline:** Bedrock contextual grounding (`ApplyGuardrail`, about $0.002 per call)
+  on the same answers, 5 times each, since P05 measured this score swinging between 0.30 and
+  0.72 on identical input.
+- **Include P05's question that is known to produce hallucinations**, from `grounding_test.py`.
+- **The question:** does checking claims one by one catch anything the single managed score
+  misses, and is it worth the extra calls?
+
+### - [ ] Stage 7: Store results ($0 idle)
+
+- Create a DynamoDB table `EvaluationResults` with on-demand billing:
+  - partition key `run_id`;
+  - sort key `item_id#metric`;
+  - attributes for score, scorer, model, n, stdev and cost.
+- A loader writes Stages 4–6 into the table.
+- **Check:** query a run back by `run_id`.
+
+### - [ ] Stage 8: Quality gate with a deliberate regression (~$0.02)
+
+- **The gate:** a Lambda `eval-quality-gate` that:
+  1. runs the golden set through `generate`;
+  2. scores the answers with Stage 5's judge, n=3;
+  3. compares them with the stored baseline;
+  4. writes a PASS or FAIL row to `EvaluationResults`;
+  5. on FAIL, publishes to the existing SNS topic.
+
+  No new CloudWatch custom metric, because custom metrics bill for existing.
+- **Threshold:** set from Stage 5's measured variance (the baseline mean minus k × stdev), not
+  from a round number. Document the reason.
+- **Schedule:** create the EventBridge rule **disabled** and run the gate by hand. A gate that
+  runs on a timer for no one is spend without purpose.
+- **Verify:**
+  - a normal run must PASS;
+  - a run using the `tier` override with Nova Micro and a low `maxTokens` must FAIL;
+  - an SNS message must actually arrive.
+
+  A gate that has never been triggered hasn't been verified.
+
+### - [ ] Stage 9: Agent metrics from `support-agent-loop` traces (~$0.02)
+
+- **Queries:** about 6 queries of differing complexity × 2 runs. Before running, hand-label
+  the expected tools for each query, held back from the agent.
+- **Measure from the agent's own trace:**
+  - did it finish with an answer, or run out of `MAX_TOOL_ITERATIONS`;
+  - did the tools it used match the expected ones;
+  - how many iterations it took.
+- **AgentCore Evaluations:** check from the docs only whether it could score this Lambda loop,
+  which isn't running on AgentCore Runtime or instrumented with OpenTelemetry. Document why it
+  applies or doesn't; build nothing.
+
+### - [ ] Stage 10: Troubleshooting methodology (Task 5.2, $0)
+
+A write-up that turns Series 1's *real* failures into a layered troubleshooting method: which
+layer to suspect first, and what each kind of symptom turned out to mean. The failures:
+- the inference profile routing outside its IAM policy;
+- the Lambda Layer broken by a dependency;
+- wheels built on macOS failing at runtime;
+- the WebSocket path with no guardrail;
+- the IAM self-escalation restriction;
+- the newline failing a "regex" check;
+- the fairness retraction;
+- the teardown that missed log groups.
+
+### - [ ] Stage 11: Write-up, teardown, LinkedIn ($0)
+
+- **`README.md`:** the stage-by-stage write-up. Score each prediction as it landed, and keep any
+  corrections visible.
+- **Offline report:** `make report` (or `python report.py`) re-renders every number from
+  `results/` with no AWS calls.
+- **`SETUP-LOG.md`:** every resource created (eval role, `eval/` prefix, table, gate Lambda,
+  disabled rule), with its idle cost and teardown command. Then decide whether to keep or
+  delete each one. The teardown check includes CloudWatch Logs.
+- **`linkedin-post-draft.md`:** written last, opening with whichever prediction missed.
+
+---
+
+## Out of scope (decisions, not oversights)
+
+- **User feedback evaluation:** P06 Stage 9 was never built, so there's no rating data.
+- **Detecting semantic drift over time:** this needs a long baseline history. Stage 7's table
+  is the start of one.
+- **An annotation or labelling UI:** that's a product, not an evaluation capability.
+- **A results dashboard:** the table can be queried directly, following P05 Stage 13's
+  precedent.
+- **Production A/B tests:** the mechanism exists (P01's AppConfig), but the system has no real
+  traffic.
+- **Claude as a judge:** blocked by the Marketplace payment problem. `gpt-oss-120b` is the
+  second judge family instead.
+
+## Cost summary (estimates, before running)
+
+| Stage | Calls (approx.) | Est. |
+|---|---|---|
+| 3 | 30 `generate` calls | ~$0.01 |
+| 4 | 1 test job + 20 generator calls + 30 judge calls | ~$0.05 |
+| 5 | ~360 Nova Micro + 300 `gpt-oss-120b` calls | ~$0.10 |
+| 6 | ~90 claim calls + 50 `ApplyGuardrail` | ~$0.10 |
+| 8 | 2–3 gate runs | ~$0.02 |
+| 9 | ~12 agent runs | ~$0.02 |
+| **Total** | | **≈ $0.30** |
+
+Everything created is $0 when idle: the IAM role, an S3 prefix, an on-demand table, a Lambda and
+a disabled rule. Prices come from the AWS Price List API, read 2026-11-14.
