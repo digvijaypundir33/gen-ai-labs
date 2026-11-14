@@ -8,9 +8,44 @@ bedrock_runtime = boto3.client("bedrock-runtime")
 cloudwatch = boto3.client("cloudwatch")
 
 STATE_MACHINE_ARN = "arn:aws:states:us-east-1:156207843797:stateMachine:rag-query-workflow"
-GENERATE_MODEL = "amazon.nova-lite-v1:0"
 MAX_WAIT_SECONDS = 25
 POLL_INTERVAL_SECONDS = 1
+
+# Complexity-tiered generation (practice-06 Stage 4). The retrieval workflow
+# already paid for an LLM complexity classification in query-router, and the
+# result is readable for free off its output: AggregateResults' ResultSelector
+# emits `subQueries`, SearchSimple's does not. So a query that went down the
+# decompose/aggregate path is one the classifier already called complex - no
+# second classification call, no Step Functions change needed.
+#
+# The signal survives a cache hit: ReturnCached has InputPath $.routing.result,
+# which replays the cached finalResult verbatim, subQueries included.
+#
+# TIER SET IS MEASURED, NOT ASSUMED. Three tiers were built and A/B'd against
+# the live guardrail with the query held constant (tier_quality_check.py):
+#
+#   nova-micro  REJECTED. On a query the corpus definitively answers, n=10:
+#               grounding mean 0.741 (stdev 0.028) vs nova-lite's 0.917
+#               (stdev 0.016) - non-overlapping, and it parks answers just
+#               under the 0.75 block threshold, so 8/10 got BLOCKED where
+#               nova-lite was blocked 0/10. The "cheap tier" turned a working
+#               answer into a refusal 80% of the time. Not a saving.
+#
+#   nova-pro    KEPT for the decomposed path. On a multi-part query the corpus
+#               can answer, n=8: grounding mean 0.924 (stdev 0.009) vs
+#               nova-lite's 0.794 (stdev 0.113), ranges [0.91,0.93] vs
+#               [0.54,0.88] - non-overlapping, 0/8 blocked vs 2/8. The win is
+#               as much stability as strength: nova-lite's variance is what
+#               dips it under the threshold.
+#
+# maxTokens is deliberately NOT tiered. A real multi-part answer measured 141
+# tokens - 28% of the existing 500 budget - so a bigger budget solves a problem
+# that does not exist here.
+MODEL_TIERS = {
+    "lite": {"modelId": "amazon.nova-lite-v1:0", "maxTokens": 500},
+    "pro": {"modelId": "amazon.nova-pro-v1:0", "maxTokens": 500},
+}
+DEFAULT_TIER = "lite"  # unchanged from pre-Stage-4 behavior
 
 GUARDRAIL_ID = "5jk3sefhtv16"
 GUARDRAIL_VERSION = "5"
@@ -115,6 +150,40 @@ def _emit_metrics(guardrail_action, grounding_score):
         pass  # metrics are observability, not a reason to fail the request
 
 
+def _emit_ops_metrics(model_id, usage, latency_ms, errored):
+    """Per-request operational metrics (practice-06 Stage 6).
+
+    CARDINALITY IS THE WHOLE DESIGN CONSTRAINT. The assignment's reference
+    `track_request()` dimensions every metric by RequestId, which mints a brand
+    new CloudWatch custom metric per request - and custom metrics bill per
+    metric per month for *existing*, not for use. That one line would turn the
+    only standing cost in this account into an unbounded one. Dimensioned by
+    ModelId only: 2 possible values, matching the tier set.
+
+    Token counts come straight off the Converse response's `usage` block, which
+    Bedrock returns for free - no tiktoken re-encode, and they're the real
+    billed figures rather than an estimate of them.
+    """
+    dims = [{"Name": "ModelId", "Value": model_id}]
+    metric_data = [
+        {"MetricName": "Latency", "Dimensions": dims, "Value": latency_ms, "Unit": "Milliseconds"},
+        {"MetricName": "ErrorCount", "Dimensions": dims, "Value": 1 if errored else 0, "Unit": "Count"},
+    ]
+    if usage:
+        metric_data += [
+            {"MetricName": "InputTokens", "Dimensions": dims,
+             "Value": usage.get("inputTokens", 0), "Unit": "Count"},
+            {"MetricName": "OutputTokens", "Dimensions": dims,
+             "Value": usage.get("outputTokens", 0), "Unit": "Count"},
+            {"MetricName": "TokenCount", "Dimensions": dims,
+             "Value": usage.get("totalTokens", 0), "Unit": "Count"},
+        ]
+    try:
+        cloudwatch.put_metric_data(Namespace="RagAssistant/Ops", MetricData=metric_data)
+    except Exception:
+        pass  # observability must never fail the request
+
+
 def check_input_safety(query):
     """Standalone apply_guardrail on the raw query, before any retrieval work
     happens. Blocking here means an unsafe query never reaches Step Functions,
@@ -134,9 +203,22 @@ def check_input_safety(query):
     return blocked, filtered_query
 
 
-def generate_answer(query, chunks):
+def select_tier(retrieval):
+    """Pick the generation model from signals already on hand.
+
+    Deliberately a pure function of already-computed inputs - no extra model
+    call. Adding a classification call here to decide which model to use would
+    spend a model call to save a model call.
+    """
+    if retrieval.get("subQueries"):
+        return "pro"  # query-router's classifier already called this complex
+    return DEFAULT_TIER
+
+
+def generate_answer(query, chunks, tier=DEFAULT_TIER):
     if not chunks:
-        return "I don't have enough information in the knowledge base to answer that.", False, None, None
+        # No model call happens on this path, so there is no usage to report.
+        return "I don't have enough information in the knowledge base to answer that.", False, None, None, None
 
     context_text = "\n\n".join(
         f"[Source {i + 1}: {c['doc']}]\n{c['text']}" for i, c in enumerate(chunks)
@@ -157,8 +239,9 @@ def generate_answer(query, chunks):
     # (query) - a single flat text block (the old shape) skips grounding
     # scoring entirely, since the guardrail has no way to tell what the answer
     # is supposed to be grounded against.
+    tier_config = MODEL_TIERS[tier]
     response = bedrock_runtime.converse(
-        modelId=GENERATE_MODEL,
+        modelId=tier_config["modelId"],
         messages=[{
             "role": "user",
             "content": [
@@ -166,7 +249,7 @@ def generate_answer(query, chunks):
                 {"guardContent": {"text": {"text": instruction, "qualifiers": ["query"]}}},
             ],
         }],
-        inferenceConfig={"maxTokens": 500, "temperature": 0},
+        inferenceConfig={"maxTokens": tier_config["maxTokens"], "temperature": 0},
         guardrailConfig={
             "guardrailIdentifier": GUARDRAIL_ID,
             "guardrailVersion": GUARDRAIL_VERSION,
@@ -198,7 +281,7 @@ def generate_answer(query, chunks):
         else:
             intervention_side = "anonymized"
 
-    return answer, hard_blocked, intervention_side, grounding_score
+    return answer, hard_blocked, intervention_side, grounding_score, response.get("usage")
 
 
 def lambda_handler(event, context):
@@ -229,7 +312,35 @@ def lambda_handler(event, context):
     retrieval = json.loads(output)
     chunks = retrieval.get("results", [])
 
-    answer, hard_blocked, intervention_side, grounding_score = generate_answer(filtered_query, chunks)
+    # Optional per-request override, for holding the query constant while
+    # varying only the model - the A/B needed to tell "this tier answers worse"
+    # apart from "this query is hard". Not reachable from API Gateway (the REST
+    # route only forwards `query`); direct-invoke only.
+    tier = payload.get("tier") or select_tier(retrieval)
+    if tier not in MODEL_TIERS:
+        return _response(400, {"error": f"unknown tier '{tier}'"})
+    print(json.dumps({
+        "tier": tier,
+        "modelId": MODEL_TIERS[tier]["modelId"],
+        "maxTokens": MODEL_TIERS[tier]["maxTokens"],
+        "subQueries": len(retrieval.get("subQueries") or []),
+    }))
+
+    started = time.time()
+    errored = False
+    try:
+        answer, hard_blocked, intervention_side, grounding_score, usage = generate_answer(
+            filtered_query, chunks, tier
+        )
+    except Exception:
+        # Emit the failure before re-raising - an ErrorCount metric that only
+        # fires on success would be useless.
+        errored = True
+        _emit_ops_metrics(MODEL_TIERS[tier]["modelId"], None,
+                          (time.time() - started) * 1000, errored)
+        raise
+    _emit_ops_metrics(MODEL_TIERS[tier]["modelId"], usage,
+                      (time.time() - started) * 1000, errored)
 
     if hard_blocked:
         guardrail_action = f"converse_{intervention_side}_intervened"
@@ -246,4 +357,6 @@ def lambda_handler(event, context):
         "sources": [] if hard_blocked else [{"doc": c["doc"], "uri": c["uri"]} for c in chunks],
         "guardrail_action": guardrail_action,
         "confidence": grounding_score,
+        "model_tier": tier,
+        "model_id": MODEL_TIERS[tier]["modelId"],
     })

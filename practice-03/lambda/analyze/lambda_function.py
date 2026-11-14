@@ -77,7 +77,11 @@ def _invoke_with_retry(model_id, prompt):
                 inferenceConfig={"maxTokens": 500, "temperature": 0.7},
             )
             _record_success(model_id)
-            return response["output"]["message"]["content"][0]["text"]
+            # usage carried alongside the text (practice-06 Stage 8) - Bedrock
+            # returns the real billed token counts for free, and record-metrics
+            # needs them to compute cost. Discarding them here meant the cost
+            # of a request was unknowable downstream.
+            return response["output"]["message"]["content"][0]["text"], response.get("usage")
         except bedrock_runtime.exceptions.ThrottlingException:
             if retries >= MAX_RETRIES:
                 _record_failure(model_id)
@@ -97,13 +101,13 @@ def analyze_document(document_text, document_type):
     model_id = FALLBACK_MODEL if _circuit_is_open(primary_model) else primary_model
 
     try:
-        analysis = _invoke_with_retry(model_id, prompt)
-        return analysis, model_id
+        analysis, usage = _invoke_with_retry(model_id, prompt)
+        return analysis, model_id, usage
     except Exception:
         if model_id == FALLBACK_MODEL:
             raise
-        analysis = _invoke_with_retry(FALLBACK_MODEL, prompt)
-        return analysis, FALLBACK_MODEL
+        analysis, usage = _invoke_with_retry(FALLBACK_MODEL, prompt)
+        return analysis, FALLBACK_MODEL, usage
 
 
 def lambda_handler(event, context):
@@ -118,9 +122,11 @@ def lambda_handler(event, context):
     if not document_text:
         return _response(400, {"error": "missing 'document'"})
 
-    analysis, model_used = analyze_document(document_text, document_type)
+    analysis, model_used, usage = analyze_document(document_text, document_type)
 
     return _response(200, {
         "analysis": analysis,
         "model_used": model_used,
+        "input_tokens": (usage or {}).get("inputTokens"),
+        "output_tokens": (usage or {}).get("outputTokens"),
     })

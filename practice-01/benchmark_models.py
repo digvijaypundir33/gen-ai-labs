@@ -31,9 +31,15 @@ MODELS = [
 # Bedrock pricing page (https://aws.amazon.com/bedrock/pricing/) before
 # trusting the cost numbers this script produces - pricing changes over time
 # and these are illustrative, not authoritative.
+# Re-verified against the Bedrock pricing page 2026-08-18 (practice-06 Stage 8):
+# nova-micro and nova-lite unchanged; nova-pro added, since practice-06's
+# complexity tiering now routes decomposed queries to it. Note nova-pro is
+# ~13x nova-lite on both input and output - see practice-06 for whether the
+# measured quality gain justifies that.
 PRICING_PER_1K_TOKENS = {
     "amazon.nova-micro-v1:0": {"input": 0.000035, "output": 0.00014},
     "amazon.nova-lite-v1:0": {"input": 0.00006, "output": 0.00024},
+    "amazon.nova-pro-v1:0": {"input": 0.0008, "output": 0.0032},
     "us.anthropic.claude-haiku-4-5-20251001-v1:0": {"input": 0.001, "output": 0.005},
 }
 

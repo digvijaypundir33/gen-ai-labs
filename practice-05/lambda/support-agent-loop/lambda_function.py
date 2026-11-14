@@ -14,7 +14,36 @@ bedrock_runtime = boto3.client("bedrock-runtime")
 bedrock_agent_runtime = boto3.client("bedrock-agent-runtime")
 lambda_client = boto3.client("lambda")
 
-MODEL_ID = "amazon.nova-lite-v1:0"
+# Complexity-tiered model selection (practice-06 Stage 4). Unlike `generate`,
+# this Lambda has no upstream classifier output to read - there's no Step
+# Functions workflow in front of it - so the tier is derived from the message
+# itself. Deliberately a keyword/length heuristic rather than an LLM
+# classification call: spending a model call to choose a model would eat the
+# saving the tiering exists to create.
+#
+# The tier is computed ONCE, before the loop, and held fixed across all
+# MAX_TOOL_ITERATIONS rounds. Re-picking mid-loop would mean a tool-use
+# conversation whose modelId changes between turns, with the same toolConfig
+# and message history - an inconsistency that isn't worth the marginal saving.
+# nova-micro is deliberately absent. It was built as a third tier here too,
+# then dropped on `generate`'s measurement (practice-06 Stage 4,
+# tier_quality_check.py): on a corpus-answerable query, n=10, nova-micro's
+# grounding scores sat at mean 0.741 against a 0.75 block threshold and got
+# BLOCKED 8/10, where nova-lite scored 0.917 and was blocked 0/10. That is a
+# model-level quality result, not a `generate`-specific one, so it applies
+# here without re-deriving it.
+MODEL_TIERS = {
+    "lite": {"modelId": "amazon.nova-lite-v1:0", "maxTokens": 600},
+    "pro": {"modelId": "amazon.nova-pro-v1:0", "maxTokens": 600},
+}
+DEFAULT_TIER = "lite"  # unchanged from pre-Stage-4 behavior
+# Multi-step asks - the agent will likely need several tool round-trips, which
+# is exactly where a weaker model loops or gives up early.
+COMPLEX_MARKERS = (
+    "and then", "after that", "compare", "both", "all of", "each of",
+    "why", "explain", "troubleshoot", "diagnose", "update", "change",
+)
+
 KNOWLEDGE_BASE_ID = "LTIWE7M3DC"
 CRM_ACTIONS_FUNCTION = "crm-agent-actions"
 GUARDRAIL_ID = "5jk3sefhtv16"
@@ -110,21 +139,38 @@ TOOL_HANDLERS = {
 }
 
 
+def select_tier(user_message):
+    """Pure function of the incoming message - no model call, see MODEL_TIERS."""
+    lowered = user_message.lower()
+    if any(marker in lowered for marker in COMPLEX_MARKERS):
+        return "pro"
+    return DEFAULT_TIER
+
+
 def lambda_handler(event, context):
     user_message = event.get("message")
     if not user_message:
         return {"error": "missing 'message'"}
+
+    tier = select_tier(user_message)
+    tier_config = MODEL_TIERS[tier]
+    print(json.dumps({
+        "tier": tier,
+        "modelId": tier_config["modelId"],
+        "maxTokens": tier_config["maxTokens"],
+        "messageWords": len(user_message.split()),
+    }))
 
     messages = [{"role": "user", "content": [{"text": user_message}]}]
     trace = []
 
     for iteration in range(MAX_TOOL_ITERATIONS):
         response = bedrock_runtime.converse(
-            modelId=MODEL_ID,
+            modelId=tier_config["modelId"],
             system=[{"text": SYSTEM_PROMPT}],
             messages=messages,
             toolConfig=TOOL_CONFIG,
-            inferenceConfig={"maxTokens": 600, "temperature": 0},
+            inferenceConfig={"maxTokens": tier_config["maxTokens"], "temperature": 0},
             guardrailConfig={"guardrailIdentifier": GUARDRAIL_ID, "guardrailVersion": GUARDRAIL_VERSION, "trace": "enabled"},
         )
         stop_reason = response["stopReason"]
@@ -145,11 +191,12 @@ def lambda_handler(event, context):
                 "answer": assistant_message["content"][0]["text"],
                 "trace": trace,
                 "iterations": iteration + 1,
+                "model_tier": tier,
             }
 
         if stop_reason != "tool_use":
             final_text = next((c["text"] for c in assistant_message["content"] if "text" in c), "")
-            return {"answer": final_text, "trace": trace, "iterations": iteration + 1}
+            return {"answer": final_text, "trace": trace, "iterations": iteration + 1, "model_tier": tier}
 
         messages.append(assistant_message)
         tool_results = []
@@ -173,4 +220,4 @@ def lambda_handler(event, context):
             })
         messages.append({"role": "user", "content": tool_results})
 
-    return {"answer": "Reached max tool iterations without a final answer.", "trace": trace, "iterations": MAX_TOOL_ITERATIONS}
+    return {"answer": "Reached max tool iterations without a final answer.", "trace": trace, "iterations": MAX_TOOL_ITERATIONS, "model_tier": tier}
