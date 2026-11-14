@@ -8,19 +8,42 @@ about it, not just the parts that worked on the first try.
 
 Sharing these under `#awsexamprep`.
 
-## Practices
+The practices come in two series:
+
+- **[Series 1](./series-1/)**: building things. Practices 01–06, each one an exam-prep assignment
+  built for real.
+- **[Series 2](./series-2/)**: checking whether the evidence holds up. Practices 07–11 measure,
+  audit and stress-test what Series 1 left running: evaluation, abstention, whether
+  guardrails actually fire, whether the graders can be trusted, and data readiness. It
+  follows stricter rules: predictions committed first, repeated sampling, and pass/fail
+  decided by evidence. The plan is in [`series-2/README.md`](./series-2/README.md).
+
+## Series 1 — Building it
 
 | # | Practice | Topics | Status |
 |---|----------|--------|--------|
-| 01 | [Resilient multi-model AI assistant on Amazon Bedrock](./practice-01/) — [build log](./practice-01/SETUP-LOG.md) | Bedrock, model benchmarking, AppConfig, Lambda, API Gateway, Step Functions, a real circuit breaker | Parts 1-3 built and tested live, Part 4 documented only, everything torn down |
-| 02 | [RAG assistant over technical documentation](./practice-02/) — [build log](./practice-02/SETUP-LOG.md) · [Q&A](./practice-02/QNA.md) | Chunking strategies, embeddings, Bedrock Knowledge Bases, S3 Vectors, OpenSearch k-NN, hybrid search, reranking, MRR/NDCG, query decomposition, streaming | Stages 1-8 built and verified live, everything still running |
-| 03 | [Resilient document analysis pipeline](./practice-03/) — [build log](./practice-03/SETUP-LOG.md) | Sync/async APIs, SQS + DLQ, SNS, WebSocket streaming, DynamoDB circuit breaker, X-Ray, Step Functions model routing — built on top of Practice 02's existing infrastructure rather than from scratch | Stages 1-7 built and verified live, everything still running |
-| 04 | [AI-powered support ticket system](./practice-04/) — [build log](./practice-04/SETUP-LOG.md) | Lambda authorizers, Bedrock Prompt Flows, AWS Strands Agents, Bedrock Data Automation, a second Express Step Functions workflow, WebSocket chat, React + Amplify UI, a first pytest suite — built on top of Practice 02/03's infrastructure | Stages 1-16 built and verified live, everything still running |
-| 05 | [Safe & responsible AI assistant](./practice-05/) — [build log](./practice-05/SETUP-LOG.md) | Bedrock Guardrails tuned against a real adversarial corpus, contextual grounding, Comprehend PII masking, a tiered moderation Step Functions workflow (built and deliberately not deployed), jsonschema output validation, a hand-rolled agent tool-use loop, LLM-as-judge fairness evaluation — built on top of Practice 02/04's infrastructure | Stages 0-12 and 14 built and verified live (Stage 13 skipped), everything still running — and unlike practices 02-04, nothing here is a standing/idle cost |
-| 06 | [Cost, performance and observability optimisation](./practice-06/) — [build log](./practice-06/SETUP-LOG.md) | Complexity-tiered model selection A/B'd against the live guardrail, fixed-cardinality CloudWatch metrics, scheduled token-usage anomaly detection, real cost-per-request tracking — plus four of the assignment's own suggestions measured and rejected | Stages 0-8 built and verified live (Stage 9 deferred), everything still running — one scheduled rule left disabled |
+| 01 | [Resilient multi-model AI assistant on Amazon Bedrock](./series-1/practice-01/) — [build log](./series-1/practice-01/SETUP-LOG.md) | Bedrock, model benchmarking, AppConfig, Lambda, API Gateway, Step Functions, a real circuit breaker | Parts 1-3 built and tested live, Part 4 documented only, everything torn down |
+| 02 | [RAG assistant over technical documentation](./series-1/practice-02/) — [build log](./series-1/practice-02/SETUP-LOG.md) · [Q&A](./series-1/practice-02/QNA.md) | Chunking strategies, embeddings, Bedrock Knowledge Bases, S3 Vectors, OpenSearch k-NN, hybrid search, reranking, MRR/NDCG, query decomposition, streaming | Stages 1-8 built and verified live, everything still running |
+| 03 | [Resilient document analysis pipeline](./series-1/practice-03/) — [build log](./series-1/practice-03/SETUP-LOG.md) | Sync/async APIs, SQS + DLQ, SNS, WebSocket streaming, DynamoDB circuit breaker, X-Ray, Step Functions model routing — built on top of Practice 02's existing infrastructure rather than from scratch | Stages 1-7 built and verified live, everything still running |
+| 04 | [AI-powered support ticket system](./series-1/practice-04/) — [build log](./series-1/practice-04/SETUP-LOG.md) | Lambda authorizers, Bedrock Prompt Flows, AWS Strands Agents, Bedrock Data Automation, a second Express Step Functions workflow, WebSocket chat, React + Amplify UI, a first pytest suite — built on top of Practice 02/03's infrastructure | Stages 1-16 built and verified live, everything still running |
+| 05 | [Safe & responsible AI assistant](./series-1/practice-05/) — [build log](./series-1/practice-05/SETUP-LOG.md) | Bedrock Guardrails tuned against a real adversarial corpus, contextual grounding, Comprehend PII masking, a tiered moderation Step Functions workflow (built and deliberately not deployed), jsonschema output validation, a hand-rolled agent tool-use loop, LLM-as-judge fairness evaluation — built on top of Practice 02/04's infrastructure | Stages 0-12 and 14 built and verified live (Stage 13 skipped), everything still running — and unlike practices 02-04, nothing here is a standing/idle cost |
+| 06 | [Cost, performance and observability optimisation](./series-1/practice-06/) — [build log](./series-1/practice-06/SETUP-LOG.md) | Complexity-tiered model selection A/B'd against the live guardrail, fixed-cardinality CloudWatch metrics, scheduled token-usage anomaly detection, real cost-per-request tracking — plus four of the assignment's own suggestions measured and rejected | Stages 0-8 built and verified live (Stage 9 deferred), everything still running — one scheduled rule left disabled |
 
 Each practice lives in its own folder — the write-up is that folder's `README.md`, alongside its
-build log, code, and anything else it produced. I'll add `practice-04/` etc. as I go.
+build log, code, and anything else it produced.
+
+## Series 2 — Is the evidence any good?
+
+| # | Practice | The question | Status |
+|---|----------|--------------|--------|
+| 07 | [Evaluation & QA capstone](./series-2/practice-07/) — [plan](./series-2/practice-07/PLAN.md) | Does Bedrock's managed evaluation agree with my hand-rolled one, and what does a quality gate need before it can be trusted? | Planned |
+| 08 | Abstention is a property of the prompt | How far does the refusal rate move when only the wording that permits "I don't know" changes? | Not started |
+| 09 | Guardrails that never fired | Does every Series 1 safety control actually fire, and does it fail open or closed when it breaks? | Not started |
+| 10 | Is the grader trustworthy? | Do the graders behind Series 1's headline numbers agree with a human? | Not started |
+| 11 | Data readiness, factorially | Across corpus × model × prompt × retriever, which one actually moves accuracy? | Not started |
+
+The details for each practice, the series rules and the LinkedIn plan are in
+[`series-2/README.md`](./series-2/README.md).
 
 ## Interview prep
 

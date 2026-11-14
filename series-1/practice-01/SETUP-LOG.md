@@ -87,3 +87,10 @@ Two things worth noting for next time:
   deleted, since they were customer-managed, not AWS-owned) before the role itself would delete.
 - Verified clear with a scripted sweep across Lambda, API Gateway, Step Functions, DynamoDB,
   AppConfig, and IAM (users/roles/policies) after the fact — all empty.
+- **Correction (2026-11-14):** that sweep didn't include CloudWatch Logs. Deleting a Lambda or a
+  state machine doesn't delete its log group, so three survived the teardown:
+  `/aws/lambda/ai-assistant-circuit-breaker`, `/aws/lambda/ai-assistant-model-abstraction` and
+  `/aws/vendedlogs/states/ai-assistant-resilience-workflow-Logs`. They held ~67 KB in total
+  with no retention set, so storage cost was negligible. They were found and deleted during a
+  cleanup sweep before Series 2. Any future teardown sweep should include `logs
+  describe-log-groups`.
