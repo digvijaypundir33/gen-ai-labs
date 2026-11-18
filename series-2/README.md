@@ -190,6 +190,10 @@ follows the rules above (it gains a `PREDICTIONS.md` before Stage 1).
 - **Tool layer:** P05's agent tools reworked to fail closed — explicit status and next action,
   no bare nulls, customer identity bound outside the model's reach — and measured as its own
   axis.
+- **Agent metrics** (moved from P07): from `support-agent-loop`'s own trace, measure whether it
+  finished or ran out of iterations, whether its tools matched expected tools hand-labelled in
+  advance, and how many iterations it took. Also check from the docs whether AgentCore
+  Evaluations can score a plain Lambda loop.
 - **The question it settles:** whether Series 1 should have spent its effort on the data
   rather than the model and prompt choices.
 
@@ -202,7 +206,10 @@ link, hashtags). Series 2 adds two posts:
   one sentence, and what's coming.
 - **One post per practice** — `linkedin-post-draft.md`, written from the findings after the
   write-up is done, never before. Lead with the prediction that missed if there was one.
-- **Wrap-up post** — which Series 1 numbers survived, which didn't.
+- **Wrap-up post** — which Series 1 numbers survived, which didn't. It comes with the
+  **troubleshooting methodology** (exam Task 5.2, moved from P07): every real failure from both
+  series, turned into a layered method for which layer to suspect first and what each symptom
+  turned out to mean.
 
 Hashtags: `#awsexamprep` on 07 (it's an exam assignment); `#genai #aws #bedrock #llmevaluation`
 across the series.

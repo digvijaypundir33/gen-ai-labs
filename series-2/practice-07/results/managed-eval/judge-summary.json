@@ -1,0 +1,172 @@
+[
+  {
+    "item_id": "q01-lambda-concurrency",
+    "blocked": false,
+    "grounding_score": 0.94,
+    "scores": {
+      "Correctness": 1.0,
+      "Completeness": 1.0,
+      "Faithfulness": 1.0,
+      "Refusal": 0.0
+    },
+    "explanations": {
+      "Correctness": "The candidate response provides a detailed explanation of the default total concurrency limit for AWS Lambda functions, which is indeed 1,000 units of concurrency across all functions in a region by default. It also includes additional information about the account-level and function-level concurrency limits, as well as a method to check the current concurrency quota using the AWS CLI. This additional information, while not directly asked in the task, does not contradict the ground truth and adds value by providing a more comprehensive understanding of the concurrency limits.",
+      "Completeness": "The candidate response provides detailed information about the default total concurrency limit for Lambda functions in an AWS account, including both account-level and function-level concurrency limits, as well as a method to check the current quota. This matches and exceeds the detail level of the reference response.",
+      "Faithfulness": "The candidate response provides detailed information about the concurrency limits for AWS Lambda functions, specifically mentioning the default total concurrency limit for Lambda functions in an AWS account and breaking down the concurrency quotas at both the account level and the function level. The information in the candidate response is largely consistent with the details provided in the related passages. The passages confirm that by default, functions in an AWS account can have up to 1,000 units of concurrency across all functions in a Region, and that Lambda reserves 100 units of concurrency for functions that don't explicitly reserve concurrency. The candidate response also correctly notes that you can check your current account-level concurrency quota using the AWS CLI command `aws lambda get-account-settings`.",
+      "Refusal": "The response provides the default concurrency limit for AWS Lambda functions, directly addressing the prompt."
+    }
+  },
+  {
+    "item_id": "q02-lambda-concurrency",
+    "blocked": false,
+    "grounding_score": 0.93,
+    "scores": {
+      "Correctness": 1.0,
+      "Completeness": 1.0,
+      "Faithfulness": 1.0,
+      "Refusal": 0.0
+    },
+    "explanations": {
+      "Correctness": "The candidate response provides a detailed explanation of the two phases an execution environment goes through when handling a Lambda request, which are the Init phase and the Invoke phase. It correctly identifies these phases and offers additional context and details about what happens in each phase. The ground truth response simply states the two phases without additional context. The candidate response does not introduce any incorrect information and aligns perfectly with the ground truth.",
+      "Completeness": "The candidate response provides a detailed explanation of the two phases an execution environment goes through when handling a Lambda request, matching the level of detail in the reference response. It includes descriptions of both the Init phase and the Invoke phase, along with additional context and sources.",
+      "Faithfulness": "The candidate response describes the two phases an execution environment goes through when handling a Lambda request: the **Init phase** and the **Invoke phase**. The explanation provided for each phase aligns well with the information given in the related passages. Specifically:\n\n- The **Init phase** is described as the initialization phase where Lambda sets up the execution environment, which is necessary for the first request to the function. This matches the passage which states, \"When your function receives its very first request... Lambda creates a new execution environment and runs the code outside your main handler during the Init phase.\" For subsequent requests, if the environment is already initialized, this phase is skipped, which is also consistent with the passage.\n\n- The **Invoke phase** is described as the phase where Lambda runs your function's main handler code to process the request. This follows the Init phase and is where the actual function execution occurs. This matches the passage which states, \"Then, Lambda runs your function's main handler code during the Invoke phase.\"\n\nGiven that the candidate response accurately reflects the information provided in the related passages, it can be concluded that all the information in the candidate answer is present in the context passages.",
+      "Refusal": "The response directly explains the two phases of a Lambda request handling process."
+    }
+  },
+  {
+    "item_id": "q03-s3-versioning",
+    "blocked": false,
+    "grounding_score": 0.89,
+    "scores": {
+      "Correctness": null,
+      "Completeness": 1.0,
+      "Faithfulness": 0.75,
+      "Refusal": 0.0
+    },
+    "explanations": {
+      "Correctness": "Explanation: The candidate response states that the S3 SOAP API does not support S3 Versioning and provides additional context by referencing a source and explaining the implications of this limitation. The ground truth response simply states that the SOAP API does not support S3 Versioning. While the core information matches the ground truth, the candidate response goes further by explaining why this is the case and suggesting alternative methods (REST API or AWS SDKs) for managing versioned objects in Amazon S3.\n\nAnswer: correct based on ground truth\n\nThe candidate response correctly conveys the same fundamental information as the ground truth but with additional context and explanation. Therefore, it is a correct and accurate response to the task.",
+      "Completeness": "The candidate response provides a clear and detailed explanation that the S3 SOAP API does not support S3 Versioning, citing a source and explaining the alternative methods for managing versioned objects. This matches the level of detail in the reference response.",
+      "Faithfulness": "The candidate response states that \"The S3 SOAP API does not support S3 Versioning.\" This specific information is directly mentioned in the first passage under the \"Note\" section, which explicitly states, \"The SOAP API does not support S3 Versioning.\" Additionally, the candidate response continues by advising that \"Instead, you must use the REST API or one of the AWS SDKs to work with versioned objects,\" which aligns with the general understanding that S3 Versioning is managed through the REST API rather than the SOAP API.",
+      "Refusal": "The response directly answers the prompt by stating that S3 SOAP API does not support S3 Versioning."
+    }
+  },
+  {
+    "item_id": "q04-s3-versioning",
+    "blocked": false,
+    "grounding_score": 0.91,
+    "scores": {
+      "Correctness": 1.0,
+      "Completeness": 1.0,
+      "Faithfulness": 1.0,
+      "Refusal": 0.0
+    },
+    "explanations": {
+      "Correctness": "The task is to determine if S3 Versioning is turned on by default when creating a bucket. The ground truth answer states that S3 Versioning is disabled by default and must be explicitly enabled. The candidate response also states that S3 Versioning is not turned on by default and must be explicitly enabled. Both the ground truth and the candidate response provide the same information and both are correct in stating that S3 Versioning is disabled by default.",
+      "Completeness": "The candidate response provides the same information as the reference response, including the fact that S3 Versioning is disabled by default and must be explicitly enabled. It also includes a source reference, which adds credibility to the response.",
+      "Faithfulness": "The candidate response states that \"S3 Versioning is not turned on by default when you create a bucket. By default, S3 Versioning is disabled on buckets, and you must explicitly enable it.\" This information is directly mentioned in the first passage provided, which states, \"By default, S3 Versioning is disabled on buckets, and you must explicitly enable it.\" Therefore, the information in the candidate answer is fully present in the context provided by the passages.",
+      "Refusal": "The response directly answers the prompt without refusal or suggesting an alternative."
+    }
+  },
+  {
+    "item_id": "q05-dynamodb-on-demand-capacity",
+    "blocked": false,
+    "grounding_score": 0.98,
+    "scores": {
+      "Correctness": 1.0,
+      "Completeness": 1.0,
+      "Faithfulness": 1.0,
+      "Refusal": 0.0
+    },
+    "explanations": {
+      "Correctness": "The candidate response restates the ground truth information accurately and includes a reference to a source. The ground truth answer states that you can switch a DynamoDB table from provisioned to on-demand capacity mode up to four times in a 24-hour rolling window. The candidate response mirrors this information precisely and attributes it to a source, which is consistent with the ground truth.",
+      "Completeness": "The candidate response provides the same information and detail as the reference response, including the exact number of times and the time frame. It also cites the source and includes the relevant excerpt.",
+      "Faithfulness": "The candidate response states that you can switch a DynamoDB table from provisioned capacity mode to on-demand mode up to four times in a 24-hour rolling window. This specific piece of information is directly quoted from the provided passage. Therefore, the information in the candidate answer is fully present in the related passages.",
+      "Refusal": "The response directly answers the prompt without refusal or alternative suggestions."
+    }
+  },
+  {
+    "item_id": "q06-dynamodb-on-demand-capacity",
+    "blocked": false,
+    "grounding_score": 0.96,
+    "scores": {
+      "Correctness": 1.0,
+      "Completeness": 1.0,
+      "Faithfulness": 1.0,
+      "Refusal": 0.0
+    },
+    "explanations": {
+      "Correctness": "The ground truth response states that in DynamoDB on-demand mode, one write request unit represents one write operation per second for an item up to 1 KB in size. The candidate response restates this information accurately and also includes a source attribution, which is not relevant to the correctness of the answer but does not detract from its accuracy.\n\nThe candidate response directly matches the ground truth response in terms of content and accuracy. Therefore, the candidate response is a correct and accurate representation of the ground truth.",
+      "Completeness": "The candidate response provides the same information and detail as the reference response, including the source. It matches the level of detail and does not miss any steps or important details.",
+      "Faithfulness": "The candidate response states that \"In DynamoDB on-demand mode, one write request unit represents one write operation per second for an item up to 1 KB in size.\" This information is directly present in the related passages. Specifically, the passage \"Read request units and write request units\" clearly mentions: \"One *write request unit* represents one write operation per second, for an item up to 1 KB in size.\"",
+      "Refusal": "The response directly explains what one write request unit represents in DynamoDB on-demand mode."
+    }
+  },
+  {
+    "item_id": "q07-bedrock-knowledge-base",
+    "blocked": true,
+    "grounding_score": 0.42,
+    "scores": {
+      "Correctness": 0.0,
+      "Completeness": 0.0,
+      "Faithfulness": 0.0,
+      "Refusal": 1.0
+    },
+    "explanations": {
+      "Correctness": "The task is to identify the two types of Amazon Bedrock Knowledge Bases. The ground truth answer provides this information as \"Managed Knowledge Base and Customer-managed Knowledge Base.\" The candidate response, however, does not directly address the task and instead suggests that it cannot provide the requested information, recommending rephrasing the question or contacting support.\n\nThe candidate response does not give the correct and accurate information required by the task, despite the ground truth providing the exact details needed.",
+      "Completeness": "The candidate response does not provide any information about the two types of Amazon Bedrock Knowledge Bases, which is necessary to answer the question. The reference response clearly lists the two types, but the candidate response instead suggests seeking further assistance.",
+      "Faithfulness": "The candidate response \"I'm not able to provide that response. Please rephrase your question or contact support for further assistance.\" does not contain any specific information that is directly mentioned or can be inferred from the provided passages. The passages discuss the technical details of Amazon Bedrock Knowledge Bases, including how they work, the types of knowledge bases available, and various functionalities and integrations. However, the candidate response is a general statement indicating a limitation in providing a specific response and suggests rephrasing the question or contacting support. This type of response does not align with the technical content provided in the passages.",
+      "Refusal": "The response explicitly declines to answer the prompt and suggests an alternative action."
+    }
+  },
+  {
+    "item_id": "q08-stepfunctions-amazon-states-language",
+    "blocked": false,
+    "grounding_score": 0.97,
+    "scores": {
+      "Correctness": 1.0,
+      "Completeness": 1.0,
+      "Faithfulness": 1.0,
+      "Refusal": 0.0
+    },
+    "explanations": {
+      "Correctness": "The ground truth answer specifies that the file extension for Step Functions state machine definitions when written outside the console is `.asl.json`. The candidate response accurately restates this information, emphasizing that state machine definitions should be saved with the `.asl.json` extension when using an editor outside the AWS Step Functions console. It also includes a source reference, which adds credibility but is not necessary for correctness.",
+      "Completeness": "The candidate response provides the necessary information and detail to answer the question. It explicitly states that Step Functions state machine definitions must be saved with the .asl.json extension when written outside the console, which matches the reference response.",
+      "Faithfulness": "The candidate response states that when defining Step Functions state machines outside the AWS Step Functions console, the state machine definitions must be saved with the file extension `.asl.json`. This specific piece of information is directly mentioned in the first passage under the **Note** section. The passage explicitly states that if you define your state machines outside the Step Functions' console, you must save your state machine definitions with the extension `.asl.json`.",
+      "Refusal": "The response directly provides the required file extension for Step Functions state machine definitions."
+    }
+  },
+  {
+    "item_id": "q09-apigateway-caching",
+    "blocked": false,
+    "grounding_score": 0.99,
+    "scores": {
+      "Correctness": 1.0,
+      "Completeness": 0.25,
+      "Faithfulness": 1.0,
+      "Refusal": 0.0
+    },
+    "explanations": {
+      "Correctness": "The task is to determine if the candidate answer correctly and accurately responds to the given ground truth. The ground truth states that the default cache TTL for API Gateway response caching is 300 seconds, with a maximum of 3600 seconds and TTL=0 disabling caching. The candidate response states that the default cache TTL for API Gateway response caching is 300 seconds.\n\nThe candidate response directly matches the ground truth in stating the default cache TTL as 300 seconds. It also includes a source reference, which, while not necessary for correctness, adds credibility to the response.",
+      "Completeness": "The candidate response provides the default cache TTL for API Gateway response caching as 300 seconds. However, it does not mention the maximum TTL or the fact that TTL=0 disables caching, which are both included in the reference response.",
+      "Faithfulness": "The candidate response states that \"The default cache Time-To-Live (TTL) for API Gateway response caching is 300 seconds.\" This information is directly mentioned in the first passage under the section \"Cache settings for REST APIs in API Gateway.\" The passage explicitly states: \"The default TTL value for API caching is 300 seconds.\" Therefore, the information in the candidate answer is explicitly present in the context passages.",
+      "Refusal": "The response directly provides the default cache TTL for API Gateway, so it does not refuse the prompt."
+    }
+  },
+  {
+    "item_id": "q10-apigateway-caching",
+    "blocked": true,
+    "grounding_score": 0.43,
+    "scores": {
+      "Correctness": 0.0,
+      "Completeness": 0.0,
+      "Faithfulness": 0.0,
+      "Refusal": 1.0
+    },
+    "explanations": {
+      "Correctness": "The task asks which HTTP methods have caching enabled by default when caching is turned on for an API Gateway stage. The ground truth answer specifies that only GET methods have caching enabled by default. The candidate response, however, does not directly address the question and instead suggests that it cannot provide the response, asking for a rephrased question or to contact support.\n\nThe candidate response does not provide the specific information requested by the task, nor does it confirm or deny the ground truth answer. Instead, it deflects the question, which means it does not contribute to solving the task at hand.",
+      "Completeness": "The candidate response does not provide any information about HTTP methods with caching enabled by default for an API Gateway stage. It instead suggests seeking further assistance, which does not address the question.",
+      "Faithfulness": "The candidate answer states, \"I'm not able to provide that response. Please rephrase your question or contact support for further assistance.\" This response does not provide any specific information that can be directly linked to the context passages provided. The passages discuss API caching settings, how to enable caching, method-level cache overrides, and cache key configurations in API Gateway. The candidate answer does not contain any of this information and instead suggests that the question needs to be rephrased or that support should be contacted. Therefore, there is no information in the candidate answer that is present in the context passages.",
+      "Refusal": "The response explicitly declines to answer the prompt and suggests an alternative action."
+    }
+  }
+]

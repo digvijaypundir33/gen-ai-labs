@@ -104,7 +104,8 @@ under $0.001 in total.
     about 67× Nova Lite, against $0.15/$0.60 for `gpt-oss-120b`. Claude is out unless the
     Marketplace payment problem gets fixed.
 - **AgentCore Evaluations exists** (`bedrock-agentcore-control list-evaluators` returns 32).
-  Whether it can score a plain Lambda Converse loop is checked in Stage 9, from the docs only.
+  Agent metrics moved to Practice 11 when this practice was trimmed (see below), so whether it
+  can score a plain Lambda Converse loop gets checked there.
 
 ### - [x] Stage 1: Evaluation toolkit (offline, $0, done 2026-11-14)
 
@@ -180,7 +181,76 @@ answers. Script: `collect_responses.py`.
   `RagAssistant/Ops` token metrics therefore record blocked requests as 0 tokens. Later stages
   score what the user actually saw, with a block counted as a failed answer.
 
-### - [ ] Stage 4: Managed Bedrock evaluation vs. P01's hand-rolled benchmark (~$0.05)
+### - [x] Stage 4: Managed Bedrock evaluation vs. P01's hand-rolled benchmark (< $0.02, done 2026-11-18)
+
+Scripts: `managed_eval.py` (build, submit, status, fetch) and `compare_managed.py` (offline).
+Outputs are in `results/managed-eval/`.
+
+**4a.** The bucket and role were created (SETUP-LOG rows 2–3). The test job **completed in ~10
+minutes**, so evaluation jobs are *not* blocked for this account. Each real job also took ~15
+minutes, even for 10 items.
+
+**4b: programmatic Q&A, bare model, no retrieval, same 10 questions:**
+
+| | Nova Micro | Nova Lite |
+|---|---|---|
+| Managed F1 | mean **0.104**, sd 0.063 | mean **0.118**, sd 0.068 |
+| P01 word overlap | mean 0.649, sd 0.208 | mean 0.658, sd 0.181 |
+| Answer length | 228 words | 204 words |
+| Robustness | 28.4, range 13.5–96.4 | 19.5, range 10.6–34.0 |
+| Toxicity | ~0.001 | ~0.001 |
+
+- **Neither scorer separates the two models.** Lite leads by 0.014 on F1 and by 0.009 on
+  overlap, both well inside the per-item spread. On its own finance questions, P01 had ranked
+  Micro first (0.687 vs. 0.654). That ranking was never a real difference; both directions sit
+  inside the noise.
+- **F1 is low because the references are one line and the answers are ~200 words,** so even a
+  correct answer scores ~0.1–0.2. The test item scored 0.14 on a correct answer. The
+  length-bias hypothesis was only partly supported: the length–score rank correlations were
+  mixed (F1 −0.25 for Micro, +0.45 for Lite), so at n=10 the clean opposite-bias story didn't
+  show up. What did show is that every answer is long, so F1 is floored for all of them.
+- **Robustness is unusable here.** It's a relative change in F1 under perturbed prompts. On a
+  baseline F1 of ~0.1, tiny absolute changes become 10–96% swings.
+- **The bare-model job doesn't measure the RAG system.** It sends the question with no
+  retrieval, so it scores what Nova knows, not what the assistant answers.
+
+**4c: managed RAG judge (Nova Micro) on `generate`'s real answers, trial 0:**
+- Correctness mean 0.78 (9 of 10 scored), Completeness 0.72, Faithfulness 0.78, Refusal 0.20.
+- **The two blocked answers (q07, q10) score 0 on correctness and 1 on refusal,** so the judge
+  correctly sees the refusal the user got. Every unblocked answer scores 1.0 on correctness.
+- **A silent empty score.** On q03, the judge wrote a full Correctness explanation but returned
+  no score. That's 1 of 40 managed judgments, and a pipeline averaging the scores would quietly
+  drop it.
+- **Faithfulness caught something the guardrail passed.** q03 got faithfulness 0.75 for adding
+  "you must use the REST API or SDKs", which isn't in the retrieved passage. The guardrail's
+  grounding score passed the same answer at 0.89. This is early evidence for prediction 4;
+  Stage 6 tests it properly.
+- **One low score is a golden-set artifact.** q09 got completeness 0.25 because the reference
+  also lists the maximum TTL and the TTL=0 behaviour, which the question never asked about.
+  Adjudicated by hand: the answer is correct and complete for the question asked. The
+  reference is broader than the question, so a reference-based completeness score penalises a
+  right answer.
+
+**Prediction 1 is scored in README (Stage 9).** The data supports it: F1 < 0.4 for both models,
+and the gap is inside the noise.
+
+**Findings before any results:**
+- **The KB data source is scoped to the whole docs bucket.** It has no `inclusionPrefixes`.
+  The last ingestion (2026-07-29) saw only the 6 docs, but P03 and P04 have since written 11
+  customer-feedback `.docx`/`.txt` files to `feedback-raw/`. Both are formats the KB indexes.
+  `check-and-sync` only starts a sync when `raw-docs/` changes, but the sync then scans
+  everything. So the next doc change would pull customer feedback into RAG answers. That's
+  dormant, not live. **Not fixed here**, because it's a Series 1 change; the fix is
+  `inclusionPrefixes: ["raw-docs/"]` on the data source. It's a lead for Practice 09, and it's
+  why evaluation data got its own bucket.
+- **The prompt quota (4 KB) would have rejected the first judge dataset.** Pasting the
+  retrieved chunks into the prompt made 5–13 KB prompts. The fix was a different job type:
+  `RagEvaluation` with bring-your-own responses, which takes passages as their own field.
+  Its dataset format was confirmed from the user guide's Markdown page, since the HTML pages
+  wouldn't render.
+- **P01's "similarity" is word recall,** the share of reference words found anywhere in the
+  answer. So it rewards long answers, while managed F1 penalises them. The two scorers have
+  opposite length biases, so `compare_managed.py` reports answer length next to both.
 
 - **4a, setup and a test job:**
   - Create the IAM role `rag-assistant-eval-role`: trusted by `bedrock.amazonaws.com`, scoped
@@ -259,32 +329,20 @@ answers. Script: `collect_responses.py`.
 
   A gate that has never been triggered hasn't been verified.
 
-### - [ ] Stage 9: Agent metrics from `support-agent-loop` traces (~$0.02)
+### Trimmed out (2026-11-18)
 
-- **Queries:** about 6 queries of differing complexity × 2 runs. Before running, hand-label
-  the expected tools for each query, held back from the agent.
-- **Measure from the agent's own trace:**
-  - did it finish with an answer, or run out of `MAX_TOOL_ITERATIONS`;
-  - did the tools it used match the expected ones;
-  - how many iterations it took.
-- **AgentCore Evaluations:** check from the docs only whether it could score this Lambda loop,
-  which isn't running on AgentCore Runtime or instrumented with OpenTelemetry. Document why it
-  applies or doesn't; build nothing.
+The practice was trimmed to keep it to one story: evaluating the evaluators, then gating on
+the result. Two stages moved, and none were dropped:
 
-### - [ ] Stage 10: Troubleshooting methodology (Task 5.2, $0)
+- **Agent metrics** (was Stage 9) → **Practice 11.** Practice 11 rebuilds the agent's tool
+  layer and measures it anyway. Scoring completion, tool choice and iterations from
+  `support-agent-loop`'s trace belongs there, along with the AgentCore Evaluations check.
+- **Troubleshooting methodology** (was Stage 10, exam Task 5.2) → **the Series 2 wrap-up.** It
+  turns real failures into a method, and Series 2 keeps producing them. This practice alone has
+  added a publicly reachable override, a Knowledge Base scoped to the whole bucket, and a 4 KB
+  quota that would have rejected the first dataset. So it's stronger written once, at the end.
 
-A write-up that turns Series 1's *real* failures into a layered troubleshooting method: which
-layer to suspect first, and what each kind of symptom turned out to mean. The failures:
-- the inference profile routing outside its IAM policy;
-- the Lambda Layer broken by a dependency;
-- wheels built on macOS failing at runtime;
-- the WebSocket path with no guardrail;
-- the IAM self-escalation restriction;
-- the newline failing a "regex" check;
-- the fairness retraction;
-- the teardown that missed log groups.
-
-### - [ ] Stage 11: Write-up, teardown, LinkedIn ($0)
+### - [ ] Stage 9: Write-up, teardown, LinkedIn ($0)
 
 - **`README.md`:** the stage-by-stage write-up. Score each prediction as it landed, and keep any
   corrections visible.
@@ -319,8 +377,7 @@ layer to suspect first, and what each kind of symptom turned out to mean. The fa
 | 5 | ~360 Nova Micro + 300 `gpt-oss-120b` calls | ~$0.10 |
 | 6 | ~90 claim calls + 50 `ApplyGuardrail` | ~$0.10 |
 | 8 | 2–3 gate runs | ~$0.02 |
-| 9 | ~12 agent runs | ~$0.02 |
-| **Total** | | **≈ $0.35** |
+| **Total** | | **≈ $0.33** |
 
 Everything created is $0 when idle: the IAM role, an S3 prefix, an on-demand table, a Lambda and
 a disabled rule. Prices come from the AWS Price List API, read 2026-11-14.

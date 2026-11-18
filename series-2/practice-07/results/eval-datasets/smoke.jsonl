@@ -1,0 +1,1 @@
+{"prompt": "What is the default total concurrency limit for Lambda functions in an AWS account?", "referenceResponse": "1,000 concurrent executions across all functions in a Region, by default.", "category": "lambda-concurrency"}

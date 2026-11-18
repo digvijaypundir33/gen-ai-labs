@@ -1,0 +1,240 @@
+{
+  "qa-micro": {
+    "model": "amazon.nova-micro-v1:0",
+    "n": 10,
+    "managed_f1": {
+      "n": 10,
+      "mean": 0.10449651621736024,
+      "stdev": 0.062941203317879,
+      "min": 0.022222222222222223,
+      "max": 0.19148936170212766
+    },
+    "p01_overlap": {
+      "n": 10,
+      "mean": 0.6488383838383839,
+      "stdev": 0.20824093111196862,
+      "min": 0.3333333333333333,
+      "max": 1.0
+    },
+    "response_words": {
+      "n": 10,
+      "mean": 227.7,
+      "stdev": 58.64971345956337,
+      "min": 176,
+      "max": 370
+    },
+    "spearman_f1_vs_length": -0.24848484848484853,
+    "spearman_overlap_vs_length": 0.1393939393939394,
+    "items": [
+      {
+        "category": "lambda-concurrency",
+        "prompt": "What is the default total concurrency limit for Lambda functions in an AWS account?",
+        "managed_f1": 0.19148936170212766,
+        "managed_robustness": 22.987400653437447,
+        "managed_toxicity": 0.0003404004673939198,
+        "p01_overlap": 0.7272727272727273,
+        "response_words": 176
+      },
+      {
+        "category": "lambda-concurrency",
+        "prompt": "What are the two phases an execution environment goes through when handling a Lambda request?",
+        "managed_f1": 0.03007518796992481,
+        "managed_robustness": 27.836008059124143,
+        "managed_toxicity": 0.0014250156236812472,
+        "p01_overlap": 0.5,
+        "response_words": 254
+      },
+      {
+        "category": "s3-versioning",
+        "prompt": "Does the S3 SOAP API support S3 Versioning?",
+        "managed_f1": 0.11023622047244094,
+        "managed_robustness": 19.88867004623571,
+        "managed_toxicity": 0.000708949111867696,
+        "p01_overlap": 0.8888888888888888,
+        "response_words": 245
+      },
+      {
+        "category": "s3-versioning",
+        "prompt": "Is S3 Versioning turned on by default when you create a bucket?",
+        "managed_f1": 0.16981132075471697,
+        "managed_robustness": 21.342835472004865,
+        "managed_toxicity": 0.0004479288181755692,
+        "p01_overlap": 0.6666666666666666,
+        "response_words": 177
+      },
+      {
+        "category": "dynamodb-on-demand-capacity",
+        "prompt": "How many times in a 24-hour window can you switch a DynamoDB table from provisioned to on-demand capacity mode?",
+        "managed_f1": 0.09433962264150944,
+        "managed_robustness": 16.94155171523009,
+        "managed_toxicity": 0.00040655856719240546,
+        "p01_overlap": 0.5555555555555556,
+        "response_words": 256
+      },
+      {
+        "category": "dynamodb-on-demand-capacity",
+        "prompt": "What does one write request unit represent in DynamoDB on-demand mode?",
+        "managed_f1": 0.17687074829931976,
+        "managed_robustness": 18.343153138928702,
+        "managed_toxicity": 0.00044961710227653384,
+        "p01_overlap": 1.0,
+        "response_words": 370
+      },
+      {
+        "category": "bedrock-knowledge-base",
+        "prompt": "What are the two types of Amazon Bedrock Knowledge Bases?",
+        "managed_f1": 0.03305785123966942,
+        "managed_robustness": 96.38554665673308,
+        "managed_toxicity": 0.00040603859815746546,
+        "p01_overlap": 0.3333333333333333,
+        "response_words": 214
+      },
+      {
+        "category": "stepfunctions-amazon-states-language",
+        "prompt": "What file extension must Step Functions state machine definitions use when written outside the console?",
+        "managed_f1": 0.022222222222222223,
+        "managed_robustness": 13.525362944700497,
+        "managed_toxicity": 0.0011913843918591738,
+        "p01_overlap": 0.6666666666666666,
+        "response_words": 208
+      },
+      {
+        "category": "apigateway-caching",
+        "prompt": "What is the default cache TTL, in seconds, for API Gateway response caching?",
+        "managed_f1": 0.08602150537634409,
+        "managed_robustness": 31.87051487455018,
+        "managed_toxicity": 0.00039105190080590546,
+        "p01_overlap": 0.4,
+        "response_words": 185
+      },
+      {
+        "category": "apigateway-caching",
+        "prompt": "Which HTTP methods have caching enabled by default when you turn on caching for an API Gateway stage?",
+        "managed_f1": 0.1308411214953271,
+        "managed_robustness": 14.962771030139443,
+        "managed_toxicity": 0.0007776438724249601,
+        "p01_overlap": 0.75,
+        "response_words": 192
+      }
+    ]
+  },
+  "qa-lite": {
+    "model": "amazon.nova-lite-v1:0",
+    "n": 10,
+    "managed_f1": {
+      "n": 10,
+      "mean": 0.1182896588089449,
+      "stdev": 0.06808460226611023,
+      "min": 0.03389830508474576,
+      "max": 0.2325581395348837
+    },
+    "p01_overlap": {
+      "n": 10,
+      "mean": 0.658008658008658,
+      "stdev": 0.18136771974456106,
+      "min": 0.3333333333333333,
+      "max": 0.9285714285714286
+    },
+    "response_words": {
+      "n": 10,
+      "mean": 203.6,
+      "stdev": 74.47326142090641,
+      "min": 139,
+      "max": 378
+    },
+    "spearman_f1_vs_length": 0.4545454545454546,
+    "spearman_overlap_vs_length": 0.5636363636363637,
+    "items": [
+      {
+        "category": "lambda-concurrency",
+        "prompt": "What is the default total concurrency limit for Lambda functions in an AWS account?",
+        "managed_f1": 0.2325581395348837,
+        "managed_robustness": 10.614862402581187,
+        "managed_toxicity": 0.00038347800727933645,
+        "p01_overlap": 0.8181818181818182,
+        "response_words": 173
+      },
+      {
+        "category": "lambda-concurrency",
+        "prompt": "What are the two phases an execution environment goes through when handling a Lambda request?",
+        "managed_f1": 0.04,
+        "managed_robustness": 15.538278214118495,
+        "managed_toxicity": 0.00044556803186424077,
+        "p01_overlap": 0.5,
+        "response_words": 169
+      },
+      {
+        "category": "s3-versioning",
+        "prompt": "Does the S3 SOAP API support S3 Versioning?",
+        "managed_f1": 0.1111111111111111,
+        "managed_robustness": 15.098827486305128,
+        "managed_toxicity": 0.001591687323525548,
+        "p01_overlap": 0.7777777777777778,
+        "response_words": 268
+      },
+      {
+        "category": "s3-versioning",
+        "prompt": "Is S3 Versioning turned on by default when you create a bucket?",
+        "managed_f1": 0.1923076923076923,
+        "managed_robustness": 20.479640310994355,
+        "managed_toxicity": 0.0005775699391961098,
+        "p01_overlap": 0.75,
+        "response_words": 195
+      },
+      {
+        "category": "dynamodb-on-demand-capacity",
+        "prompt": "How many times in a 24-hour window can you switch a DynamoDB table from provisioned to on-demand capacity mode?",
+        "managed_f1": 0.07874015748031496,
+        "managed_robustness": 16.528248722860788,
+        "managed_toxicity": 0.0003725327260326594,
+        "p01_overlap": 0.5555555555555556,
+        "response_words": 244
+      },
+      {
+        "category": "dynamodb-on-demand-capacity",
+        "prompt": "What does one write request unit represent in DynamoDB on-demand mode?",
+        "managed_f1": 0.15584415584415584,
+        "managed_robustness": 21.514328554267887,
+        "managed_toxicity": 0.0010632170597091317,
+        "p01_overlap": 0.9285714285714286,
+        "response_words": 378
+      },
+      {
+        "category": "bedrock-knowledge-base",
+        "prompt": "What are the two types of Amazon Bedrock Knowledge Bases?",
+        "managed_f1": 0.04597701149425287,
+        "managed_robustness": 20.389665577707483,
+        "managed_toxicity": 0.00034954704460687935,
+        "p01_overlap": 0.3333333333333333,
+        "response_words": 139
+      },
+      {
+        "category": "stepfunctions-amazon-states-language",
+        "prompt": "What file extension must Step Functions state machine definitions use when written outside the console?",
+        "managed_f1": 0.03389830508474576,
+        "managed_robustness": 34.01112904960581,
+        "managed_toxicity": 0.00042497937101870775,
+        "p01_overlap": 0.6666666666666666,
+        "response_words": 139
+      },
+      {
+        "category": "apigateway-caching",
+        "prompt": "What is the default cache TTL, in seconds, for API Gateway response caching?",
+        "managed_f1": 0.13861386138613863,
+        "managed_robustness": 23.254071624299552,
+        "managed_toxicity": 0.0003539460594765842,
+        "p01_overlap": 0.5,
+        "response_words": 177
+      },
+      {
+        "category": "apigateway-caching",
+        "prompt": "Which HTTP methods have caching enabled by default when you turn on caching for an API Gateway stage?",
+        "managed_f1": 0.15384615384615385,
+        "managed_robustness": 17.810563359916742,
+        "managed_toxicity": 0.002709347987547517,
+        "p01_overlap": 0.75,
+        "response_words": 154
+      }
+    ]
+  }
+}

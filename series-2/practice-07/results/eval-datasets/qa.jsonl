@@ -1,0 +1,10 @@
+{"prompt": "What is the default total concurrency limit for Lambda functions in an AWS account?", "referenceResponse": "1,000 concurrent executions across all functions in a Region, by default.", "category": "lambda-concurrency"}
+{"prompt": "What are the two phases an execution environment goes through when handling a Lambda request?", "referenceResponse": "The Init phase and the Invoke phase.", "category": "lambda-concurrency"}
+{"prompt": "Does the S3 SOAP API support S3 Versioning?", "referenceResponse": "No, the SOAP API does not support S3 Versioning.", "category": "s3-versioning"}
+{"prompt": "Is S3 Versioning turned on by default when you create a bucket?", "referenceResponse": "No, S3 Versioning is disabled by default and must be explicitly enabled.", "category": "s3-versioning"}
+{"prompt": "How many times in a 24-hour window can you switch a DynamoDB table from provisioned to on-demand capacity mode?", "referenceResponse": "Up to four times in a 24-hour rolling window.", "category": "dynamodb-on-demand-capacity"}
+{"prompt": "What does one write request unit represent in DynamoDB on-demand mode?", "referenceResponse": "One write operation per second for an item up to 1 KB in size.", "category": "dynamodb-on-demand-capacity"}
+{"prompt": "What are the two types of Amazon Bedrock Knowledge Bases?", "referenceResponse": "Managed Knowledge Base and Customer-managed Knowledge Base.", "category": "bedrock-knowledge-base"}
+{"prompt": "What file extension must Step Functions state machine definitions use when written outside the console?", "referenceResponse": "The .asl.json extension.", "category": "stepfunctions-amazon-states-language"}
+{"prompt": "What is the default cache TTL, in seconds, for API Gateway response caching?", "referenceResponse": "300 seconds (the maximum is 3600, and TTL=0 disables caching).", "category": "apigateway-caching"}
+{"prompt": "Which HTTP methods have caching enabled by default when you turn on caching for an API Gateway stage?", "referenceResponse": "Only GET methods have caching enabled by default.", "category": "apigateway-caching"}
