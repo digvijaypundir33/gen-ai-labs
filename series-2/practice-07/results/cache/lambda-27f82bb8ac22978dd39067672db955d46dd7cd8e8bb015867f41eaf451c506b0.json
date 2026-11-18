@@ -1,0 +1,49 @@
+{
+  "function": "generate",
+  "payload": {
+    "query": "What are the two phases an execution environment goes through when handling a Lambda request?",
+    "include_debug": true
+  },
+  "trial": 1,
+  "status_code": 200,
+  "body": {
+    "query": "What are the two phases an execution environment goes through when handling a Lambda request?",
+    "answer": "The two phases an execution environment goes through when handling a Lambda request are the **Init phase** and the **Invoke phase**.\n\n- **Init phase**: This is the initialization phase where Lambda sets up the execution environment. During this phase, Lambda runs the code outside your main handler. This phase is necessary to prepare the environment for the function execution.\n  \n- **Invoke phase**: Once the environment is initialized, Lambda proceeds to the invoke phase where it runs your function's main handler code to process the request.\n\n[Source 1]",
+    "sources": [
+      {
+        "doc": "lambda-concurrency.md",
+        "uri": "s3://rag-assistant-docs-dig-003/raw-docs/lambda-concurrency.md"
+      },
+      {
+        "doc": "lambda-concurrency.md",
+        "uri": "s3://rag-assistant-docs-dig-003/raw-docs/lambda-concurrency.md"
+      }
+    ],
+    "guardrail_action": "none",
+    "confidence": 0.91,
+    "model_tier": "lite",
+    "model_id": "amazon.nova-lite-v1:0",
+    "debug": {
+      "chunks": [
+        {
+          "doc": "lambda-concurrency.md",
+          "uri": "s3://rag-assistant-docs-dig-003/raw-docs/lambda-concurrency.md",
+          "text": "ecution environment instance (labeled from `A` through `F`). Here's how Lambda handles each request:\nRequest Lambda behavior Reasoning\n| Request | Lambda behavior | Reasoning | \n| - | - | - | \n| 1 | Provisions new environment **A** | This is the first request; no execution environment instances are available. | \n| 2 | Provisions new environment **B** | Existing execution environment instance **A** is busy. | \n| 3 | Provisions new environment **C** | Existing execution environment instances **A** and **B** are both busy. | \n| 4 | Provisions new environment **D** | Existing execution environment instances **A**, **B**, and **C** are all busy. | \n| 5 | Provisions new environment **E** | Existing execution environment instances **A**, **B**, **C**, and **D** are all busy. | \n| 6 | Reuses environment **A** | Execution environment instance **A** has finished processing request **1** and is now available. | \n| 7 | Reuses environment **B** | Execution environment instance **B** has finished processing request **2** and is now available. | \n| 8 | Reuses environment **C** | Execution environment instance **C** has finished processing request **3** and is now available. | \n| 9 | Provisions new environment **F** | Existing execution environment instances **A**, **B**, **C**, **D**, and **E** are all busy. | \n| 10 | Reuses environment **D** | Execution environment instance **D** has finished processing request **4** and is now available. | "
+        },
+        {
+          "doc": "lambda-concurrency.md",
+          "uri": "s3://rag-assistant-docs-dig-003/raw-docs/lambda-concurrency.md",
+          "text": "# Understanding Lambda function scaling <a name=\"lambda-concurrency\"></a> **Concurrency** is the number of in-flight requests that your AWS Lambda function is handling at the same time. For each concurrent request, Lambda provisions a separate instance of your execution environment. As your functions receive more requests, Lambda automatically handles scaling the number of execution environments until you reach your account's concurrency limit. By default, Lambda provides your account with a total concurrency limit of 1,000 concurrent executions across all functions in an AWS Region. To support your specific account needs, you can [request a quota increase](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-concurrency-limit-increase/) and configure function-level concurrency controls so that your critical functions don't experience throttling. This topic explains concurrency concepts and function scaling in Lambda. By the end of this topic, you'll be able to understand how to calculate concurrency, visualize the two main concurrency control options (reserved and provisioned), estimate appropriate concurrency control settings, and view metrics for further optimization. **Topics** + [Understanding and visualizing concurrency](#understanding-concurrency) + [Calculating concurrency for a function](#calculating-concurrency) + [Understanding reserved concurrency and provisioned concurrency](#reserved-and-provisioned) + [Understanding concurrency and requests per second](#concurrency-vs-requests-per-second) + [Concurrency quotas](#concurrency-quotas) + [Configuring reserved concurrency for a function](configuration-concurrency.md) + [Configuring provisioned concurrency for a function](provisioned-concurrency.md) + [Lambda scaling behavior](scaling-behavior.md) + [Monitoring concurrency](monitoring-concurrency.md) ## Understanding and visualizing concurrency <a name=\"understanding-concurrency\"></a> Lambda invokes your function in a secure and isolated [execution environment](lambda-runtime-environment.md). To handle a request, Lambda must first initialize an execution environment (the [Init phase](lambda-runtime-environment.md#runtimes-lifecycle-ib)), before using it to invoke your function (the [Invoke phase](lambda-runtime-environment.md#runtimes-lifecycle-invoke)): ![Typical lifecycle of an execution environment, showing Init and Invoke phases.](http://docs.aws.amazon.com/lambda/latest/dg/images/concurrency-1-environment.png) **Note** Actual Init and Invoke durations can vary depending on many factors, such as the runtime you choose and the Lambda function code. The previous diagram isn't meant to represent the exact proportions of Init and Invoke phase durations. The previous diagram uses a rectangle to represent a single execution environment. When your function receives its very first request (represented by the yellow circle with label `1`), Lambda creates a new execution environment and runs the code outside your main handler during the Init phase. Then, Lambda runs your function's main handler code during the Invoke phase. During this entire process, this execution environment is busy and cannot process other requests. When Lambda finishes processing the first request, this execution environment can then process additional requests for the same function. For subsequent requests, Lambda doesn't need to re-initialize the environment. ![An execution environment handling two requests in succession.](http://docs.aws.amazon.com/lambda/latest/dg/images/concurrency-2-two-requests.png) In the previous diagram, Lambda reuses the execution environment to handle the second request (represented by the yellow circle with label `2`). So far, we've focused on just a single instance of your execution environment (that is, a concurrency of 1). In practice, Lambda may need to provision multiple execution environment instances in parallel to handle all incoming requests. When your function receives a new request, one of two things can happen: + If a pre-initialized execution environment instance is available, Lambda uses it to process the request. + Otherwise, Lambda creates a new execution environment instance to process the request. For example, let's explore what happens when your function receives 10 requests: ![A Lambda function provisioning multiple environments to handle 10 requests.](http://docs.aws.amazon.com/lambda/latest/dg/images/concurrency-3-ten-requests.png) In the previous diagram, each horizontal plane represents a single execution environment instance (labeled from `A` through `F`). Here's how Lambda handles each request:"
+        }
+      ],
+      "usage": {
+        "inputTokens": 1425,
+        "outputTokens": 114,
+        "totalTokens": 1539
+      },
+      "sub_queries": null
+    }
+  },
+  "latency_ms": 3244,
+  "called_at": "2026-11-18T14:08:35+00:00"
+}

@@ -105,6 +105,14 @@ the model varied ([`tier_quality_check.py`](./tier_quality_check.py)). A `tier` 
 to `generate`'s direct-invoke path specifically so *"this tier answers worse"* could be separated
 from *"this query is hard"*.
 
+> **Correction (2026-11-18, found in Practice 07 Stage 3):** the override was *not*
+> direct-invoke only. `/ask` is an `AWS_PROXY` integration with no request validator, so API
+> Gateway forwarded the whole request body, and any public caller could send `"tier": "pro"`
+> and get Nova Pro at ~13× Nova Lite's cost. The code comment claiming "the REST route only
+> forwards `query`" was never checked. `generate` now honours overrides only when the event
+> has no `requestContext`, which an API Gateway proxy event always has. This was verified live:
+> `tier=pro` sent through `/prod/ask` is served by `nova-lite`.
+
 **`nova-micro` — rejected.** On a query the corpus definitively answers, n=10:
 
 | | mean grounding | stdev | blocked |

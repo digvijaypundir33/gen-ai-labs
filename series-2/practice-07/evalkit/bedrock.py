@@ -33,19 +33,19 @@ class BudgetExceeded(RuntimeError):
     pass
 
 
-def cache_key(model_id, messages, system, inference_config, trial):
-    canonical = json.dumps(
-        {
-            "model_id": model_id,
-            "messages": messages,
-            "system": system,
-            "inference_config": inference_config,
-            "trial": trial,
-        },
-        sort_keys=True,
-        separators=(",", ":"),
-    )
+def canonical_digest(obj):
+    canonical = json.dumps(obj, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def cache_key(model_id, messages, system, inference_config, trial):
+    return canonical_digest({
+        "model_id": model_id,
+        "messages": messages,
+        "system": system,
+        "inference_config": inference_config,
+        "trial": trial,
+    })
 
 
 def reply_text(response):

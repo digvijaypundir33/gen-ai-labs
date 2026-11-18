@@ -148,12 +148,37 @@ what I expect, and what result would prove me wrong. The questions to commit to:
 5. Will the quality gate fail on the deliberately degraded configuration (Nova Micro, low
    `maxTokens`), and pass on the normal one?
 
-### - [ ] Stage 3: Collect responses once (~$0.01)
+### - [x] Stage 3: Collect responses once (~$0.06, done 2026-11-18)
 
 Call the live `generate` Lambda (direct invoke) on the 10 golden questions × 3 runs = 30 calls.
 Store each answer with its retrieved context, model, `usage` and latency in
 `results/responses.jsonl`. **Every later stage reads these files** rather than generating new
-answers.
+answers. Script: `collect_responses.py`.
+
+**What it took:**
+- `generate` didn't return chunk text or usage. An opt-in `include_debug` flag was added and
+  redeployed (SETUP-LOG row 1).
+- The estimate was revised from $0.01 to $0.057. Each call runs the whole pipeline (two guardrail
+  passes, the router and retrieval), not just the answer model.
+
+**Findings:**
+- **The `tier` override was publicly reachable.** `/ask` is an `AWS_PROXY` integration with no
+  request validator, so the full body reaches `generate`. P06's "direct-invoke only" claim was
+  never true, and any caller could pick Nova Pro. Fixed: overrides are now honoured only on
+  direct invoke. Verified live, and corrected in P06's README. This is a lead for Practice 09.
+- **Retrieval is solid:** the expected document was retrieved 30/30.
+- **7 of 30 answers were blocked.**
+  - q07 was blocked 3/3, at grounding 0.27–0.42.
+  - q10 was blocked 3/3 at 0.43, **although its retrieved passage literally contains the
+    answer** ("only `GET` methods are cached"). That is likely a false block; Stage 6 checks
+    it.
+  - q02 was blocked 1 time in 3, at 0.70; its other runs scored 0.91 and 0.93.
+- **Temperature 0 isn't deterministic.** 5 of 10 questions gave different answers across runs,
+  with identical retrieved chunks every time.
+- **Blocked answers are invisible.** Bedrock substitutes the refusal message, so the model's
+  actual text can't be scored, and usage reports 0/0/0 on all 7 blocked calls. P06's
+  `RagAssistant/Ops` token metrics therefore record blocked requests as 0 tokens. Later stages
+  score what the user actually saw, with a block counted as a failed answer.
 
 ### - [ ] Stage 4: Managed Bedrock evaluation vs. P01's hand-rolled benchmark (~$0.05)
 
@@ -289,13 +314,13 @@ layer to suspect first, and what each kind of symptom turned out to mean. The fa
 
 | Stage | Calls (approx.) | Est. |
 |---|---|---|
-| 3 | 30 `generate` calls | ~$0.01 |
+| 3 | 30 `generate` calls | ~$0.06 (measured estimate; was $0.01) |
 | 4 | 1 test job + 20 generator calls + 30 judge calls | ~$0.05 |
 | 5 | ~360 Nova Micro + 300 `gpt-oss-120b` calls | ~$0.10 |
 | 6 | ~90 claim calls + 50 `ApplyGuardrail` | ~$0.10 |
 | 8 | 2–3 gate runs | ~$0.02 |
 | 9 | ~12 agent runs | ~$0.02 |
-| **Total** | | **≈ $0.30** |
+| **Total** | | **≈ $0.35** |
 
 Everything created is $0 when idle: the IAM role, an S3 prefix, an on-demand table, a Lambda and
 a disabled rule. Prices come from the AWS Price List API, read 2026-11-14.

@@ -290,6 +290,15 @@ def lambda_handler(event, context):
         body = json.loads(body)
     payload = body or event
 
+    # Overrides (`tier`, `include_debug`) are for evaluation scripts invoking
+    # the function directly. /ask is an AWS_PROXY integration with no request
+    # validator, so API Gateway forwards the whole body - practice-06's "REST
+    # route only forwards `query`" was wrong, and any public caller could pick
+    # nova-pro (~13x nova-lite). An API Gateway proxy event always carries
+    # requestContext; a direct invoke never does (found in practice-07 Stage 3).
+    direct_invoke = "requestContext" not in event
+    include_debug = direct_invoke and bool(payload.get("include_debug"))
+
     query = payload.get("query")
     if not query:
         return _response(400, {"error": "missing 'query'"})
@@ -297,12 +306,15 @@ def lambda_handler(event, context):
     input_blocked, filtered_query = check_input_safety(query)
     if input_blocked:
         _emit_metrics("input_blocked", None)
-        return _response(200, {
+        blocked_body = {
             "query": query,
             "answer": BLOCKED_MESSAGE,
             "sources": [],
             "guardrail_action": "input_blocked",
-        })
+        }
+        if include_debug:
+            blocked_body["debug"] = {"chunks": [], "usage": None, "sub_queries": None}
+        return _response(200, blocked_body)
 
     status, output = run_retrieval(filtered_query)
 
@@ -314,9 +326,8 @@ def lambda_handler(event, context):
 
     # Optional per-request override, for holding the query constant while
     # varying only the model - the A/B needed to tell "this tier answers worse"
-    # apart from "this query is hard". Not reachable from API Gateway (the REST
-    # route only forwards `query`); direct-invoke only.
-    tier = payload.get("tier") or select_tier(retrieval)
+    # apart from "this query is hard". Direct-invoke only (see direct_invoke).
+    tier = (payload.get("tier") if direct_invoke else None) or select_tier(retrieval)
     if tier not in MODEL_TIERS:
         return _response(400, {"error": f"unknown tier '{tier}'"})
     print(json.dumps({
@@ -351,7 +362,7 @@ def lambda_handler(event, context):
 
     _emit_metrics(guardrail_action, grounding_score)
 
-    return _response(200, {
+    response_body = {
         "query": query,
         "answer": answer,
         "sources": [] if hard_blocked else [{"doc": c["doc"], "uri": c["uri"]} for c in chunks],
@@ -359,4 +370,15 @@ def lambda_handler(event, context):
         "confidence": grounding_score,
         "model_tier": tier,
         "model_id": MODEL_TIERS[tier]["modelId"],
-    })
+    }
+    # Evaluation needs what the answer was generated from (faithfulness and
+    # claim-level checks score against the chunk text) and the real billed
+    # tokens (quality-per-token). Returned even on a hard block, since a
+    # blocked answer is exactly the case an evaluation wants to inspect.
+    if include_debug:
+        response_body["debug"] = {
+            "chunks": [{"doc": c["doc"], "uri": c["uri"], "text": c["text"]} for c in chunks],
+            "usage": usage,
+            "sub_queries": retrieval.get("subQueries"),
+        }
+    return _response(200, response_body)

@@ -1,0 +1,40 @@
+{
+  "function": "generate",
+  "payload": {
+    "query": "What is the default cache TTL, in seconds, for API Gateway response caching?",
+    "include_debug": true
+  },
+  "trial": 0,
+  "status_code": 200,
+  "body": {
+    "query": "What is the default cache TTL, in seconds, for API Gateway response caching?",
+    "answer": "The default cache Time-To-Live (TTL) for API Gateway response caching is 300 seconds. [Source 1]",
+    "sources": [
+      {
+        "doc": "apigateway-caching.md",
+        "uri": "s3://rag-assistant-docs-dig-003/raw-docs/apigateway-caching.md"
+      }
+    ],
+    "guardrail_action": "none",
+    "confidence": 0.99,
+    "model_tier": "lite",
+    "model_id": "amazon.nova-lite-v1:0",
+    "debug": {
+      "chunks": [
+        {
+          "doc": "apigateway-caching.md",
+          "uri": "s3://rag-assistant-docs-dig-003/raw-docs/apigateway-caching.md",
+          "text": "# Cache settings for REST APIs in API Gateway <a name=\"api-gateway-caching\"></a> You can enable API caching in API Gateway to cache your endpoint's responses. With caching, you can reduce the number of calls made to your endpoint and also improve the latency of requests to your API. When you enable caching for a stage, API Gateway caches responses from your endpoint for a specified time-to-live (TTL) period, in seconds. API Gateway then responds to the request by looking up the endpoint response from the cache instead of making a request to your endpoint. The default TTL value for API caching is 300 seconds. The maximum TTL value is 3600 seconds. TTL=0 means caching is disabled. **Note** Caching is best-effort. You can use the `CacheHitCount` and `CacheMissCount` metrics in Amazon CloudWatch to monitor requests that API Gateway serves from the API cache. The maximum size of a response that can be cached is 1048576 bytes. Cache data encryption may increase the size of the response when it is being cached. This is a HIPAA Eligible Service. For more information about AWS, U.S. Health Insurance Portability and Accountability Act of 1996 (HIPAA), and using AWS services to process, store, and transmit protected health information (PHI), see [HIPAA Overview](https://aws.amazon.com/compliance/hipaa-compliance/). **Important** When you enable caching for a stage, only `GET` methods have caching enabled by default. This helps to ensure the safety and availability of your API. You can enable caching for other methods by [overriding method settings](#override-api-gateway-stage-cache-for-method-cache). **Important** Caching is charged by the hour based on the cache size that you select. Caching is not eligible for the AWS Free Tier. For more information, see [API Gateway Pricing](https://aws.amazon.com/api-gateway/pricing/). ## Enable Amazon API Gateway caching <a name=\"enable-api-gateway-caching\"></a> In API Gateway, you can enable caching for a specific stage. When you enable caching, you must choose a cache capacity. In general, a larger capacity gives a better performance, but also costs more. For supported cache sizes, see [cacheClusterSize](https://docs.aws.amazon.com/apigateway/latest/api/API_CreateStage.html#apigw-CreateStage-request-cacheClusterSize) in the *API Gateway API Reference*. API Gateway enables caching by creating a dedicated cache instance. This process can take up to 4 minutes. API Gateway changes caching capacity by removing the existing cache instance and creating a new one with a modified capacity. All existing cached data is deleted. **Note** The cache capacity affects the CPU, memory, and network bandwidth of the cache instance. As a result, the cache capacity can affect the performance of your cache. API Gateway recommends that you run a 10-minute load test to verify that your cache capacity is appropriate for your workload. Ensure that traffic during the load test mirrors production traffic. For example, include ramp up, constant traffic, and traffic spikes. The load test should include responses that can be served from the cache, as well as unique responses that add items to the cache. Monitor the latency, 4xx, 5xx, cache hit, and cache miss metrics during the load test. Adjust your cache capacity as needed based on these metrics. For more information about load testing, see [How do I select the best API Gateway cache capacity to avoid hitting a rate limit?](https://repost.aws/knowledge-center/api-gateway-cache-capacity). ------ #### [ AWS Management Console ] In the API Gateway console, you configure caching on the **Stages** page. You provision the stage cache and specify a default method-level cache setting. If you turn on the default method-level cache, method-level caching is turned on for all `GET` methods on your stage, unless that method has a method override. Any additional `GET` methods that you deploy to your stage will have a method-level cache. To configure method-level caching setting for specific methods of your stage, you can use method overrides. For more information about method overrides, see [Override API Gateway stage-level caching for method-level caching](#override-api-gateway-stage-cache-for-method-cache). **To configure API caching for a given stage:** 1. Sign in to the API Gateway console at [https://console.aws.amazon.com/apigateway](https://console.aws.amazon.com/apigateway). 1. Choose **Stages**. 1. In the **Stages** list for the API, choose the stage. 1. In the **Stage details** section, choose **Edit**. 1. Under **Additional settings**, for **Cache settings**, turn on **Provision API cache**. This provisions a cache cluster for your stage. 1. To activate caching for your stage, turn on **Default method-level caching**. This turns on method-level caching for all `GET` methods on your stage. Any additional `GET` methods that you deploy to this stage will have a method-level cache. **Note** If you have an existing setting for a method-level cache, changing the default method-level caching setting doesn't affect that existing setting. ![Turn on provision API cache and default method-level caching.](http://docs.aws.amazon.com/apigateway/latest/developerguide/images/api-caching-stage-flow.png) 1. Choose **Save changes**. ------ #### [ AWS CLI ] The following [update-stage](https://docs.aws.amazon.com/cli/latest/reference/apigateway/update-stage.html) command updates a stage to provision a cache and turns on method-level caching for all `GET` methods on your stage: ``` aws apigateway update-stage \\ --rest-api-id a1b2c3 \\ --stage-name 'prod' \\ --patch-operations file://patch.json ``` The contents of `patch.json` are the following: ``` [ { \"op\": \"replace\", \"path\": \"/cacheClusterEnabled\", \"value\": \"true\" }, { \"op\": \"replace\", \"path\": \"/cacheClusterSize\", \"value\": \"0.5\" }, { \"op\": \"replace\", \"path\": \"/*/*/caching/enabled\", \"value\": \"true\" } ] ``` **Note** If you have an existing setting for a method-level cache, changing the default method-level caching setting doesn't affect that existing setting. ------ **Note** Creating or deleting a cache takes about 4 minutes for API Gateway to complete. When a cache is created, the **Cache cluster** value changes from `Create in progress` to `Active`. When cache deletion is completed, the **Cache cluster** value changes from `Delete in progress` to `Inactive`. When you turn on method-level caching for all methods on your stage, the **Default method-level caching** value changes to `Active`. If you turn off method-level caching for all methods on your stage, the **Default method-level caching** value changes to `Inactive`. If you have an existing setting for a method-level cache, changing the status of the cache doesn't affect that setting. When you enable caching within a stage's **Cache settings**, only `GET` methods are cached. "
+        }
+      ],
+      "usage": {
+        "inputTokens": 1690,
+        "outputTokens": 30,
+        "totalTokens": 1720
+      },
+      "sub_queries": null
+    }
+  },
+  "latency_ms": 5766,
+  "called_at": "2026-11-18T14:08:22+00:00"
+}
