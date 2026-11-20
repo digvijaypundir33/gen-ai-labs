@@ -1,0 +1,18 @@
+{
+  "model_id": "openai.gpt-oss-120b-1:0",
+  "trial": 1,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: factual accuracy\nRubric: Are the response's facts correct, judged against the reference answer? 5 = every fact agrees with the reference and nothing is false; 3 = mostly right with a minor error or an unsupported extra claim; 1 = contradicts the reference, or states no facts.\n\nQuestion:\nWhich HTTP methods have caching enabled by default when you turn on caching for an API Gateway stage?\n\nReference answer:\nOnly GET methods have caching enabled by default.\n\nAnswer to grade:\nI'm not able to provide that response. Please rephrase your question or contact support for further assistance.\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 1000,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 1, \"reason\": \"The response provides no factual answer, contradicting the reference which states that only GET methods have caching enabled by default.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 232,
+    "output_tokens": 160
+  },
+  "latency_ms": 1573,
+  "called_at": "2026-11-20T05:28:33+00:00"
+}

@@ -1,0 +1,18 @@
+{
+  "model_id": "amazon.nova-micro-v1:0",
+  "trial": 0,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: fluency\nRubric: Is the response clear, well-formed English? 5 = clear and well-structured; 3 = understandable but awkward; 1 = hard to follow.\n\nQuestion:\nWhat is the default total concurrency limit for Lambda functions in an AWS account?\n\nReference answer:\n1,000 concurrent executions across all functions in a Region, by default.\n\nAnswer to grade:\nThe default total concurrency limit for Lambda functions in an AWS account is 1,000 units of concurrency [Source 1]. This limit applies to the total amount of concurrency that you can use across all functions in a Region. \n\nHere's a breakdown of the concurrency quotas:\n\n- **Account Level**: By default, your functions can have up to 1,000 units of concurrency across all functions in your AWS account.\n- **Function Level**: By default, you can reserve up to 900 units of concurrency across all your functions. Lambda always reserves 100 units of concurrency for functions that don't explicitly reserve concurrency.\n\nTo check your current account-level concurrency quota, you can use the AWS CLI command:\n```sh\naws lambda get-account-settings\n```\n\nThe output will include the `ConcurrentExecutions` value, which represents your total account-level concurrency quota.\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 150,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The response is clear, well-structured, and provides detailed information with proper formatting.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 331,
+    "output_tokens": 29
+  },
+  "latency_ms": 562,
+  "called_at": "2026-11-18T15:53:52+00:00"
+}

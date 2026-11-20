@@ -1,0 +1,18 @@
+{
+  "model_id": "openai.gpt-oss-120b-1:0",
+  "trial": 3,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: consistency\nRubric: Is the response internally consistent? 5 = no part contradicts another; 3 = minor tension between parts; 1 = contradicts itself.\n\nQuestion:\nDoes the S3 SOAP API support S3 Versioning?\n\nReference answer:\nNo, the SOAP API does not support S3 Versioning.\n\nAnswer to grade:\nThe S3 SOAP API does not support S3 Versioning. [Source 1] states that \"The SOAP API does not support S3 Versioning.\" This means that you cannot use the SOAP API to manage versioned objects in Amazon S3. Instead, you must use the REST API or one of the AWS SDKs to work with versioned objects.\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 1000,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"All statements consistently assert that the SOAP API does not support S3 Versioning without any contradictions.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 256,
+    "output_tokens": 160
+  },
+  "latency_ms": 1267,
+  "called_at": "2026-11-20T05:21:20+00:00"
+}

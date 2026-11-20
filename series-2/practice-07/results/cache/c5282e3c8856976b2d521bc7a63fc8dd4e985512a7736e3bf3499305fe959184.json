@@ -1,0 +1,18 @@
+{
+  "model_id": "openai.gpt-oss-120b-1:0",
+  "trial": 4,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: fluency\nRubric: Is the response clear, well-formed English? 5 = clear and well-structured; 3 = understandable but awkward; 1 = hard to follow.\n\nQuestion:\nWhat file extension must Step Functions state machine definitions use when written outside the console?\n\nReference answer:\nThe .asl.json extension.\n\nAnswer to grade:\nWhen defining Step Functions state machines outside the AWS Step Functions console, such as in an editor of your choice, you must save your state machine definitions with the file extension ***.asl.json***. [Source 1]\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 1000,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The response is a clear, well\u2011structured sentence that directly answers the question without any awkward phrasing.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 228,
+    "output_tokens": 140
+  },
+  "latency_ms": 2351,
+  "called_at": "2026-11-20T05:26:56+00:00"
+}

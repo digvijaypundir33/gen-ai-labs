@@ -1,0 +1,18 @@
+{
+  "model_id": "openai.gpt-oss-120b-1:0",
+  "trial": 4,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: completeness\nRubric: Does the response cover every part of the question asked (not everything the reference mentions)? 5 = all parts; 3 = some parts missing; 1 = none.\n\nQuestion:\nIs S3 Versioning turned on by default when you create a bucket?\n\nReference answer:\nNo, S3 Versioning is disabled by default and must be explicitly enabled.\n\nAnswer to grade:\nNo, S3 Versioning is not turned on by default when you create a bucket. By default, S3 Versioning is disabled on buckets, and you must explicitly enable it. [Source 1]\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 1000,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The answer directly addresses the question, stating that versioning is not on by default and must be enabled.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 236,
+    "output_tokens": 153
+  },
+  "latency_ms": 1503,
+  "called_at": "2026-11-20T05:22:34+00:00"
+}

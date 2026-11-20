@@ -1,0 +1,18 @@
+{
+  "model_id": "amazon.nova-micro-v1:0",
+  "trial": 0,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: completeness\nRubric: Does the response cover every part of the question asked (not everything the reference mentions)? 5 = all parts; 3 = some parts missing; 1 = none.\n\nQuestion:\nHow many times in a 24-hour window can you switch a DynamoDB table from provisioned to on-demand capacity mode?\n\nReference answer:\nUp to four times in a 24-hour rolling window.\n\nAnswer to grade:\nAccording to the provided source, you can switch a DynamoDB table from provisioned capacity mode to on-demand mode up to four times in a 24-hour rolling window [Source 1].\n\nHere is the relevant excerpt from the source:\n```\nYou can switch tables from provisioned capacity mode to on-demand mode up to four times in a 24-hour rolling window.\n```\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 150,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The response covers every part of the question asked by providing the exact number of times a switch can occur in a 24-hour window.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 223,
+    "output_tokens": 41
+  },
+  "latency_ms": 722,
+  "called_at": "2026-11-20T05:22:49+00:00"
+}

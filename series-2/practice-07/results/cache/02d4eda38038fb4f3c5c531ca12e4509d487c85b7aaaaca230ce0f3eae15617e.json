@@ -1,0 +1,18 @@
+{
+  "model_id": "openai.gpt-oss-120b-1:0",
+  "trial": 2,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: consistency\nRubric: Is the response internally consistent? 5 = no part contradicts another; 3 = minor tension between parts; 1 = contradicts itself.\n\nQuestion:\nWhat does one write request unit represent in DynamoDB on-demand mode?\n\nReference answer:\nOne write operation per second for an item up to 1 KB in size.\n\nAnswer to grade:\nIn DynamoDB on-demand mode, one write request unit represents one write operation per second for an item up to 1 KB in size. [Source 1]\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 1000,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The answer restates the reference claim without any contradictory information.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 221,
+    "output_tokens": 134
+  },
+  "latency_ms": 1255,
+  "called_at": "2026-11-20T05:24:55+00:00"
+}

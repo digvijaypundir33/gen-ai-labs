@@ -1,0 +1,18 @@
+{
+  "model_id": "openai.gpt-oss-120b-1:0",
+  "trial": 2,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: completeness\nRubric: Does the response cover every part of the question asked (not everything the reference mentions)? 5 = all parts; 3 = some parts missing; 1 = none.\n\nQuestion:\nWhat does one write request unit represent in DynamoDB on-demand mode?\n\nReference answer:\nOne write operation per second for an item up to 1 KB in size.\n\nAnswer to grade:\nIn DynamoDB on-demand mode, one write request unit represents one write operation per second for an item up to 1 KB in size. [Source 1]\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 1000,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The answer fully addresses the question by stating exactly what one write request unit represents.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 226,
+    "output_tokens": 159
+  },
+  "latency_ms": 1262,
+  "called_at": "2026-11-20T05:25:16+00:00"
+}

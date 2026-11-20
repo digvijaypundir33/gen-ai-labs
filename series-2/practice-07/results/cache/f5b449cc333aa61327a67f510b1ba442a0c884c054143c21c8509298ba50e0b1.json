@@ -1,0 +1,18 @@
+{
+  "model_id": "amazon.nova-micro-v1:0",
+  "trial": 4,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: factual accuracy\nRubric: Are the response's facts correct, judged against the reference answer? 5 = every fact agrees with the reference and nothing is false; 3 = mostly right with a minor error or an unsupported extra claim; 1 = contradicts the reference, or states no facts.\n\nQuestion:\nWhat does one write request unit represent in DynamoDB on-demand mode?\n\nReference answer:\nOne write operation per second for an item up to 1 KB in size.\n\nAnswer to grade:\nIn DynamoDB on-demand mode, one write request unit represents one write operation per second for an item up to 1 KB in size. [Source 1]\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 150,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The answer correctly states that one write request unit in DynamoDB on-demand mode represents one write operation per second for an item up to 1 KB in size, which aligns with the reference answer.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 183,
+    "output_tokens": 52
+  },
+  "latency_ms": 581,
+  "called_at": "2026-11-20T05:24:24+00:00"
+}

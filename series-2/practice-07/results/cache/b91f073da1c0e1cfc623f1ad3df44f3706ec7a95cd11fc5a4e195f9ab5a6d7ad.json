@@ -1,0 +1,18 @@
+{
+  "model_id": "openai.gpt-oss-120b-1:0",
+  "trial": 3,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: fluency\nRubric: Is the response clear, well-formed English? 5 = clear and well-structured; 3 = understandable but awkward; 1 = hard to follow.\n\nQuestion:\nWhat are the two types of Amazon Bedrock Knowledge Bases?\n\nReference answer:\nManaged Knowledge Base and Customer-managed Knowledge Base.\n\nAnswer to grade:\nI'm not able to provide that response. Please rephrase your question or contact support for further assistance.\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 1000,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The response is clear, grammatically correct, and easy to understand.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 203,
+    "output_tokens": 163
+  },
+  "latency_ms": 1505,
+  "called_at": "2026-11-20T05:26:01+00:00"
+}

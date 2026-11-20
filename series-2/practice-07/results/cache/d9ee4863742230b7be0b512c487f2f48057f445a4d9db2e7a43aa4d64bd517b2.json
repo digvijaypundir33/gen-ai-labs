@@ -1,0 +1,18 @@
+{
+  "model_id": "openai.gpt-oss-120b-1:0",
+  "trial": 3,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: relevance\nRubric: Does the response address the question that was asked? 5 = directly answers it; 3 = partly on-topic or padded with unrelated material; 1 = off-topic, or a refusal that answers nothing.\n\nQuestion:\nWhat are the two types of Amazon Bedrock Knowledge Bases?\n\nReference answer:\nManaged Knowledge Base and Customer-managed Knowledge Base.\n\nAnswer to grade:\nI'm not able to provide that response. Please rephrase your question or contact support for further assistance.\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 1000,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 1, \"reason\": \"The response does not answer the question about the two types of Amazon Bedrock Knowledge Bases.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 211,
+    "output_tokens": 129
+  },
+  "latency_ms": 1211,
+  "called_at": "2026-11-20T05:25:41+00:00"
+}

@@ -270,7 +270,46 @@ and the gap is inside the noise.
   Stage 5's own judge. Where they disagree, read the answer and decide by hand which scorer was
   right.
 
-### - [ ] Stage 5: Six-dimension judge, n=5 vs. the assignment's n=1 (~$0.10)
+### - [x] Stage 5: Six-dimension judge, n=5 vs. the assignment's n=1 (~$0.05, done 2026-11-20)
+
+Script: `judge_eval.py`. Results are in `results/judge-eval.json` and
+`results/judge-eval-report.txt`. 660 calls: arm A (the assignment's combined 1–10 prompt,
+Nova Micro, 6 runs) and arm B (independent 1–5 rubrics, Nova Micro + `gpt-oss-120b`, 5 runs
+each). Both at temperature 0.2. Pilot: 66 calls for $0.0072. The dry-run upper bound was $0.21;
+the actual cost was ~$0.05.
+
+**Results:**
+
+| | Predicted | Measured |
+|---|---|---|
+| 3a: cells whose 5 runs spread ≥ 1 point | ≥ 20% | **3%** (Nova Micro, 2/60), **2%** (`gpt-oss`, 1/60). **Missed.** |
+| 3b: single run outside its own 5-run range | ≥ 1 cell | **1/60** (q04 fluency, 9 vs. five 8s). Held, but only trivially. |
+| 3c: between-judge gap no bigger than within-judge spread | gap ≤ spread | Mean gap **0.35** vs. mean spread **0.08**. In 6/60 cells the judges disagree *every single run*. **Missed: the opposite happened.** |
+| 2: managed Correctness vs. my factual accuracy, pass/fail | ≥ 8/10 agree | **9/9** agree (q03 not comparable: the managed judge returned no score). Held. |
+
+**What it means:**
+- **At temperature 0.2, judges barely vary from run to run, but they disagree with each other
+  systematically.** Repetition can't fix a bias: five runs of a consistently wrong judge are
+  consistently wrong. P05's lesson was about variance in the system under test. The judge's own
+  risk here is *bias*, which only a second judge, or a human, exposes.
+- **Adjudicating the 6 disagreeing cells by hand:**
+  - `gpt-oss` was right on 5: a refusal *is* fluent and consistent (q07, q10 × 2); and q09's
+    answer is complete for the question asked.
+  - Nova Micro was right on 1: q01, where `gpt-oss` scored a true claim ("reserve up to 900
+    units") as inaccurate. The claim is word for word in the retrieved passage; `gpt-oss` only
+    saw the one-line reference.
+  - So the better judge overall made its one error on factual accuracy, the dimension that
+    matters most.
+- **Nova Micro shows a complete halo effect.** Every unblocked answer got 5 on all six
+  dimensions and every blocked answer got 1 on all six, including the fluency of a fluent
+  refusal. Its six-dimension scores carry one bit: blocked or not. It also ignored the rubric's
+  "against the question, not the reference" instruction on q09.
+- **The assignment's verbose JSON schema broke in 2 of 60 replies** (12 of 360 scores). Each
+  was missing a closing brace. The assignment's code would turn those into silent error
+  records.
+- **Quality-per-token mostly measures brevity.** Quality sits at the 5/5 ceiling for every
+  unblocked answer, so the ratio just ranks how short the answer is: 30 tokens beats 204. It's
+  undefined for blocked answers, which report 0 tokens.
 
 - **Dimensions** (from the assignment): relevance, factual accuracy, consistency, fluency,
   helpfulness, completeness.

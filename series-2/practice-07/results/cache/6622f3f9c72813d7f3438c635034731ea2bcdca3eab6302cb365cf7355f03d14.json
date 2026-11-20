@@ -1,0 +1,18 @@
+{
+  "model_id": "openai.gpt-oss-120b-1:0",
+  "trial": 2,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: factual accuracy\nRubric: Are the response's facts correct, judged against the reference answer? 5 = every fact agrees with the reference and nothing is false; 3 = mostly right with a minor error or an unsupported extra claim; 1 = contradicts the reference, or states no facts.\n\nQuestion:\nWhat is the default cache TTL, in seconds, for API Gateway response caching?\n\nReference answer:\n300 seconds (the maximum is 3600, and TTL=0 disables caching).\n\nAnswer to grade:\nThe default cache Time-To-Live (TTL) for API Gateway response caching is 300 seconds. [Source 1]\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 1000,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The answer correctly states the default cache TTL as 300 seconds, matching the reference.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 242,
+    "output_tokens": 130
+  },
+  "latency_ms": 1113,
+  "called_at": "2026-11-20T05:27:40+00:00"
+}

@@ -1,0 +1,44 @@
+mode: live
+bedrock calls: 334  (ceiling 340)  cache hits: 326
+tokens: 66622 in / 30091 out
+cost: $0.02280
+
+Parse failures (counted, never guessed):
+  arm A (assignment): 12/360 dimension scores
+  arm B amazon.nova-micro-v1:0: 0/300 calls  (truncated at max_tokens: 0)
+  arm B openai.gpt-oss-120b-1:0: 0/300 calls  (truncated at max_tokens: 0)
+
+Prediction 3a: share of (item, dimension) cells whose 5 runs spread by >= 1 point (predicted >= 20%)
+  amazon.nova-micro-v1:0       2/60 = 3%
+  openai.gpt-oss-120b-1:0      1/60 = 2%
+
+Prediction 3b: assignment single run outside its own 5-run range: 1/60 cells
+  q04-s3-versioning                        fluency           single 9  five-run [8.0, 8.0, 8.0, 8.0, 8.0]
+
+Prediction 3c: between-judge gap exceeds within-judge spread in 6/60 cells  (mean gap 0.35 vs mean within-spread 0.08)
+
+Dimension means, arm B (1-5):
+  dimension                  nova-micro-v1:          gpt-oss-120b-1
+  relevance            4.20 (sd 1.62, n=50)    4.20 (sd 1.62, n=50)
+  factual_accuracy     4.20 (sd 1.62, n=50)    4.00 (sd 1.63, n=50)
+  consistency          4.20 (sd 1.62, n=50)    4.96 (sd 0.28, n=50)
+  fluency              4.20 (sd 1.62, n=50)    5.00 (sd 0.00, n=50)
+  helpfulness          4.16 (sd 1.61, n=50)    4.20 (sd 1.62, n=50)
+  completeness         4.04 (sd 1.58, n=50)    4.20 (sd 1.62, n=50)
+
+Prediction 2: managed Correctness vs my factual_accuracy, pass/fail agreement 9/9 (predicted >= 8/10)
+  q03-s3-versioning                        managed None  mine(median) None  not comparable
+
+Efficiency (Module 2), from generate's real usage; blocked answers have no token count:
+  q01-lambda-concurrency                   quality 5.00  tokens  204  per-100-tokens           2.45  per-second 0.57
+  q02-lambda-concurrency                   quality 5.00  tokens  150  per-100-tokens           3.33  per-second 0.73
+  q03-s3-versioning                        quality 5.00  tokens   78  per-100-tokens           6.41  per-second 0.78
+  q04-s3-versioning                        quality 5.00  tokens   44  per-100-tokens          11.36  per-second 0.71
+  q05-dynamodb-on-demand-capacity          quality 5.00  tokens   83  per-100-tokens           6.02  per-second 0.48
+  q06-dynamodb-on-demand-capacity          quality 5.00  tokens   36  per-100-tokens          13.89  per-second 0.87
+  q07-bedrock-knowledge-base               quality 1.00  tokens    0  per-100-tokens  n/a (blocked)  per-second 0.14
+  q08-stepfunctions-amazon-states-language quality 5.00  tokens   48  per-100-tokens          10.42  per-second 0.84
+  q09-apigateway-caching                   quality 4.60  tokens   30  per-100-tokens          15.33  per-second 0.80
+  q10-apigateway-caching                   quality 1.07  tokens    0  per-100-tokens  n/a (blocked)  per-second 0.17
+
+wrote results/judge-eval.json
