@@ -36,7 +36,7 @@ build log, code, and anything else it produced.
 
 | # | Practice | The question | Status |
 |---|----------|--------------|--------|
-| 07 | [Evaluation & QA capstone](./series-2/practice-07/) — [plan](./series-2/practice-07/PLAN.md) | Does Bedrock's managed evaluation agree with my hand-rolled one, and what does a quality gate need before it can be trusted? | Planned |
+| 07 | [Evaluation & QA: can you trust the scorer?](./series-2/practice-07/) — [plan](./series-2/practice-07/PLAN.md) | Does Bedrock's managed evaluation agree with my hand-rolled one, and what does a quality gate need before it can be trusted? | Part 1 done (Stages 0–5); Part 2 (Stages 6–9) next |
 | 08 | Abstention is a property of the prompt | How far does the refusal rate move when only the wording that permits "I don't know" changes? | Not started |
 | 09 | Guardrails that never fired | Does every Series 1 safety control actually fire, and does it fail open or closed when it breaks? | Not started |
 | 10 | Is the grader trustworthy? | Do the graders behind Series 1's headline numbers agree with a human? | Not started |

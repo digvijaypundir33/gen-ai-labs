@@ -21,7 +21,7 @@ data and findings here are my own Series 1 stack.
 
 | # | Practice | The question | Builds on | Est. cost | Status |
 |---|----------|--------------|-----------|-----------|--------|
-| 07 | [Evaluation & QA capstone](./practice-07/) — [plan](./practice-07/PLAN.md) | Does Bedrock's managed evaluation agree with my hand-rolled one, and what does a quality gate need before it can be trusted? | P01 benchmark, P02 golden set, P05 judge lessons | < $0.50 | Planned |
+| 07 | [Evaluation & QA capstone](./practice-07/) — [plan](./practice-07/PLAN.md) | Does Bedrock's managed evaluation agree with my hand-rolled one, and what does a quality gate need before it can be trusted? | P01 benchmark, P02 golden set, P05 judge lessons | < $0.50 | Part 1 done (Stages 0–5, ~$0.13); Part 2 next |
 | 08 | Abstention is a property of the prompt | If only the wording that permits "I don't know" changes, how far does the RAG assistant's refusal rate move? | P02 `generate`, `test_questions.py` | < $0.10 | Not started |
 | 09 | Guardrails that never fired | Does every safety control in Series 1 actually fire — and when it breaks, does it fail open or closed? | P01/P04 circuit breakers, P04 authorizer, P05 guardrail + moderation, P06 anomaly alarm | < $0.10 | Not started |
 | 10 | Is the grader trustworthy? | Do the graders behind Series 1's headline numbers agree with a human, and is the difference between two judges bigger than one judge's run-to-run noise? | P05 `guardrail_eval.py`, P06 `tier_quality_check.py`, P07 judge | < $0.50 | Not started |
