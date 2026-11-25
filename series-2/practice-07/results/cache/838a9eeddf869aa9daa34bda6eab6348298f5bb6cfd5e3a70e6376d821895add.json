@@ -1,0 +1,18 @@
+{
+  "model_id": "amazon.nova-micro-v1:0",
+  "trial": 2,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: completeness\nRubric: Does the response cover every part of the question asked (not everything the reference mentions)? 5 = all parts; 3 = some parts missing; 1 = none.\n\nQuestion:\nWhat file extension must Step Functions state machine definitions use when written outside the console?\n\nReference answer:\nThe .asl.json extension.\n\nAnswer to grade:\nWhen defining Step Functions state machines outside the AWS Step Functions console, such as in an editor of your choice, you must save your state machine definitions with the file extension `.asl.json`. This ensures that the state machine definitions are correctly recognized and interpreted by AWS services when they are uploaded or referenced. \n\n[Source 1]\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 150,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The response accurately covers the required file extension for Step Functions state machine definitions when written outside the console.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 189,
+    "output_tokens": 32
+  },
+  "latency_ms": 585,
+  "called_at": "2026-11-25T03:51:09+00:00"
+}

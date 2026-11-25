@@ -407,7 +407,53 @@ before pushing.)
 - A loader writes Stages 4–6 into the table.
 - **Check:** query a run back by `run_id`.
 
-### - [ ] Stage 8: Quality gate with a deliberate regression (~$0.02)
+### - [x] Stage 8: Quality gate with a deliberate regression (~$0.08, done 2026-11-25)
+
+Built as `lambda/eval-quality-gate/` (SETUP-LOG rows 6–9), with the baseline from
+`gate_baseline.py`.
+
+**A change from the plan:** P06 removed the Nova Micro tier from `generate`, so the planned
+`tier` override couldn't produce the regression. Rather than redeploy `generate`, the gate has two
+modes:
+- `live` invokes the deployed system.
+- `candidate` scores a *proposed* config before it ships. It regenerates answers from the stored
+  passages, then runs the production guardrail via `ApplyGuardrail`, so a block counts as it
+  would live.
+
+**Scorer:** Nova Micro, factual accuracy and completeness, 3 runs. These are the same rubrics as
+Stage 5, imported from the Lambda's own file into the baseline script, so they can't drift apart.
+
+**Threshold, from data:** the gate scorer on Stage 3's 3 runs gave 4.13, 4.13 and 3.73 (q02's
+one-off block). Mean 4.00 − 2 × sd 0.23 = **3.54**. That's wider than the floor of one item
+flipping (0.4), so the floor didn't apply.
+
+| Run | Config | Score | Blocked | Decision |
+|---|---|---|---|---|
+| Normal 1 | live, deployed `generate` | 4.10 | 2/10 | PASS |
+| Normal 2 | candidate, Nova Lite, 500 tokens (production) | 4.50 | 1/10 | PASS |
+| Normal 3 | same again | 4.50 | 1/10 | PASS |
+| **Deliberate regression** | candidate, **Nova Micro, 40 tokens** | **4.63** | **0/10** | **PASS** ← prediction 5 missed |
+| Fail-path check (post hoc) | candidate, Nova Micro, 10 tokens | 2.40 | 2/10 | FAIL, SNS published (message ID returned) |
+
+**Prediction 5 missed. The gate passed a config I knew was worse.**
+- 7 of the 10 degraded answers stop mid-sentence ("This limit can…", "This option offers…").
+- But each golden question asks for one fact with a one-line reference, and the fact lands in
+  the first 40 tokens. So a factual-accuracy plus completeness rubric can't see truncation.
+- The degraded config also scored *above* production, because it had zero blocks. Short answers
+  leave the guardrail less to call ungrounded, including q07 and q10, which production blocks
+  every time.
+- **A gate is only as strong as its test set and rubric.** This golden set can't tell a 40-token
+  config from a 500-token one.
+- Cheap fixes, not built: a deterministic `stopReason == max_tokens` check in candidate mode, and
+  golden questions whose answers need more than one fact.
+
+**The fail path is verified separately, and labelled as post hoc.** At 10 tokens the answers cut
+off before the fact: 2.40 → FAIL, rows written, and the SNS publish was accepted. Delivery wasn't
+tested: by choice, the topic has no subscriber. It's a demo, and it stays implemented-only.
+
+**Caveat:** candidate mode is slightly optimistic compared with live (4.50 vs. 4.10, 1 block vs.
+2). It sends the prompt as one text block, where `generate` uses two `guardContent` blocks, and
+Stage 6 saw that difference change Nova Lite's drafts.
 
 - **The gate:** a Lambda `eval-quality-gate` that:
   1. runs the golden set through `generate`;

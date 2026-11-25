@@ -1,0 +1,18 @@
+{
+  "model_id": "amazon.nova-micro-v1:0",
+  "trial": 1,
+  "prompt": "You are grading one quality dimension of an answer from a technical-documentation assistant.\n\nDimension: factual accuracy\nRubric: Are the response's facts correct, judged against the reference answer? 5 = every fact agrees with the reference and nothing is false; 3 = mostly right with a minor error or an unsupported extra claim; 1 = contradicts the reference, or states no facts.\n\nQuestion:\nWhat is the default total concurrency limit for Lambda functions in an AWS account?\n\nReference answer:\n1,000 concurrent executions across all functions in a Region, by default.\n\nAnswer to grade:\nThe default total concurrency limit for Lambda functions in an AWS account is 1,000 units of concurrency [Source 1]. This limit applies at the account level and represents the maximum number of simultaneous executions that can be handled across all functions in the account. \n\nHere's a breakdown of the relevant information from the source:\n\n- **Account-level concurrency limit**: By default, Lambda allows up to 1,000 units of concurrency across all functions in an AWS account.\n- **Function-level concurrency**: Within this account-level limit, you can reserve up to 900 units of concurrency across all your functions. Lambda always reserves 100 units of concurrency for functions that do not explicitly reserve concurrency.\n\nTo summarize, the default total concurrency limit for Lambda functions in an AWS account is 1,000 units of concurrency [Source 1].\n\nReply with only a JSON object, no other text: {\"score\": <integer 1-5>, \"reason\": \"<one sentence>\"}",
+  "system": null,
+  "inference_config": {
+    "maxTokens": 150,
+    "temperature": 0.2
+  },
+  "text": "{\"score\": 5, \"reason\": \"The response accurately states the default total concurrency limit for Lambda functions in an AWS account as per the reference answer.\"}",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 347,
+    "output_tokens": 36
+  },
+  "latency_ms": 623,
+  "called_at": "2026-11-25T03:50:38+00:00"
+}

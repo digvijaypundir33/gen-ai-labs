@@ -1,0 +1,199 @@
+{
+  "run_scores": [
+    4.133333333333334,
+    4.133333333333334,
+    3.7333333333333334
+  ],
+  "mean": 4.0,
+  "sd": 0.23094010767585052,
+  "threshold": 3.538119784648299,
+  "rule": "mean - max(2*sd, one-item flip of 0.4)",
+  "per_trial": {
+    "0": [
+      {
+        "item_id": "q01-lambda-concurrency",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q02-lambda-concurrency",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q03-s3-versioning",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q04-s3-versioning",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q05-dynamodb-on-demand-capacity",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q06-dynamodb-on-demand-capacity",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q07-bedrock-knowledge-base",
+        "score": 1.0,
+        "blocked": true,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q08-stepfunctions-amazon-states-language",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q09-apigateway-caching",
+        "score": 4.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q10-apigateway-caching",
+        "score": 1.3333333333333333,
+        "blocked": true,
+        "parse_failures": 0
+      }
+    ],
+    "1": [
+      {
+        "item_id": "q01-lambda-concurrency",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q02-lambda-concurrency",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q03-s3-versioning",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q04-s3-versioning",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q05-dynamodb-on-demand-capacity",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q06-dynamodb-on-demand-capacity",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q07-bedrock-knowledge-base",
+        "score": 1.0,
+        "blocked": true,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q08-stepfunctions-amazon-states-language",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q09-apigateway-caching",
+        "score": 4.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q10-apigateway-caching",
+        "score": 1.3333333333333333,
+        "blocked": true,
+        "parse_failures": 0
+      }
+    ],
+    "2": [
+      {
+        "item_id": "q01-lambda-concurrency",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q02-lambda-concurrency",
+        "score": 1.0,
+        "blocked": true,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q03-s3-versioning",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q04-s3-versioning",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q05-dynamodb-on-demand-capacity",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q06-dynamodb-on-demand-capacity",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q07-bedrock-knowledge-base",
+        "score": 1.0,
+        "blocked": true,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q08-stepfunctions-amazon-states-language",
+        "score": 5.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q09-apigateway-caching",
+        "score": 4.0,
+        "blocked": false,
+        "parse_failures": 0
+      },
+      {
+        "item_id": "q10-apigateway-caching",
+        "score": 1.3333333333333333,
+        "blocked": true,
+        "parse_failures": 0
+      }
+    ]
+  }
+}
