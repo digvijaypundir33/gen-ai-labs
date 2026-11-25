@@ -19,9 +19,22 @@ PRICING_PER_1K_TOKENS = {
     "openai.gpt-oss-120b-1:0": {"input": 0.00015, "output": 0.0006},
 }
 
-# Bedrock Guardrails contextual grounding check: $0.10 per 1,000 text units,
-# where a text unit is up to 1,000 characters.
+# Bedrock Guardrails, per text unit (up to 1,000 characters), from the Price List API.
 GROUNDING_PRICE_PER_TEXT_UNIT = 0.0001
+# rag-assistant-guardrail v5 also runs content filters ($0.00015), denied topics
+# ($0.00015) and PII ($0.0001) on the text it guards. Word filters are free.
+ANSWER_POLICIES_PRICE_PER_TEXT_UNIT = 0.00015 + 0.00015 + 0.0001
+
+
+def text_units(text):
+    return max(1, -(-len(text) // 1000))
+
+
+def guardrail_cost_estimate(source_text, query_text, answer_text):
+    """Estimated USD for one ApplyGuardrail call on rag-assistant-guardrail v5."""
+    grounding = (text_units(source_text) + text_units(query_text) + text_units(answer_text)) \
+        * GROUNDING_PRICE_PER_TEXT_UNIT
+    return grounding + text_units(answer_text) * ANSWER_POLICIES_PRICE_PER_TEXT_UNIT
 
 # Cross-region inference profiles prefix the base model ID (us.amazon.nova-...).
 # They bill at the base model's price.

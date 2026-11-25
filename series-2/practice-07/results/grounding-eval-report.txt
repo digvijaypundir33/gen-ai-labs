@@ -1,0 +1,45 @@
+mode: live
+bedrock calls: 89  (ceiling 130)  cache hits: 0
+tokens: 136653 in / 21389 out
+cost: $0.05667
+mode: live
+generate invocations: 1  (ceiling 1)  cache hits: 0
+estimated cost: $0.0019  (at $0.0019/call, practice-05's measured end-to-end figure)
+
+item                                     shown    judge      claims     unsupported share      grounding x5
+----------------------------------------------------------------------------------------------------------------------
+q01-lambda-concurrency                   ok       nova-micro [6, 6, 5]  0.00 0.00 0.00         -
+                                                  gpt-oss    [7, 7, 7]  0.00 0.00 0.00         
+q02-lambda-concurrency                   ok       nova-micro [5, 4, 5]  0.00 0.00 0.00         -
+                                                  gpt-oss    [8, 7, 7]  0.00 0.00 0.00         
+q03-s3-versioning                        ok       nova-micro [3, 3, 3]  0.33 0.33 0.00         0.89 0.89 0.89 0.89 0.89
+                                                  gpt-oss    [3, 3, 3]  0.33 0.33 0.33         
+q04-s3-versioning                        ok       nova-micro [1, 2, 1]  0.00 0.50 0.00         -
+                                                  gpt-oss    [2, 2, 2]  0.00 0.00 0.00         
+q05-dynamodb-on-demand-capacity          ok       nova-micro [1, 1, 1]  0.00 0.00 0.00         -
+                                                  gpt-oss    [1, 1, 1]  0.00 0.00 0.00         
+q06-dynamodb-on-demand-capacity          ok       nova-micro [1, 1, 1]  0.00 0.00 0.00         0.96 0.96 0.96 0.96 0.96
+                                                  gpt-oss    [1, 1, 1]  0.00 0.00 0.00         
+q07-bedrock-knowledge-base               BLOCKED  nova-micro [13, 15, 13] 0.00 0.00 0.00         -
+                                                  gpt-oss    [15, 12, 15] 0.00 0.00 0.00         
+q08-stepfunctions-amazon-states-language ok       nova-micro [1, 1, 1]  0.00 0.00 0.00         -
+                                                  gpt-oss    [1, 1, 1]  0.00 0.00 0.00         
+q09-apigateway-caching                   ok       nova-micro [1, 1, 1]  0.00 0.00 0.00         -
+                                                  gpt-oss    [1, 1, 1]  0.00 0.00 0.00         
+q10-apigateway-caching                   BLOCKED  nova-micro [1, 1, 1]  0.00 0.00 0.00         0.92 0.92 0.92 0.92 0.92
+                                                  gpt-oss    [1, 1, 1]  0.00 0.00 0.00         
+probe-snapstart                          BLOCKED  nova-micro [3, 3, 3]  0.33 0.33 0.33         0.79 0.79 0.79 0.79 0.79
+                                                  gpt-oss    [3, 3, 3]  0.33 0.33 0.33         
+
+Unsupported claims, for hand adjudication against the passages:
+  q03-s3-versioning                      [nova-micro] Instead, you must use the REST API or one of the AWS SDKs to work with versioned objects.
+  q03-s3-versioning                      [gpt-oss] Instead, you must use the REST API or one of the AWS SDKs to work with versioned objects.
+  q04-s3-versioning                      [nova-micro] S3 Versioning is turned on by default when you create a bucket.
+  probe-snapstart                        [nova-micro] To gain precise details about the performance improvement in milliseconds, you would need to refer to the official AWS documentation or other authoritative sources on Lambda SnapStart.
+  probe-snapstart                        [gpt-oss] To gain precise details about the performance improvement in milliseconds, you would need to refer to the official AWS documentation or other authoritative sources on Lambda SnapStart.
+
+Prediction 4a (claim check flags an answer whose grounding passed >= once): ['q03-s3-versioning', 'probe-snapstart']
+Prediction 4b (grounding range > 0.2 across 5 runs): none
+  ranges: {'q03-s3-versioning': 0.0, 'q06-dynamodb-on-demand-capacity': 0.0, 'q10-apigateway-caching': 0.0, 'probe-snapstart': 0.0}
+
+wrote results/grounding-eval.json

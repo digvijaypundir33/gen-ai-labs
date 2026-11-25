@@ -23,7 +23,7 @@ import os
 import time
 from datetime import datetime, timezone
 
-from evalkit.pricing import token_cost
+from evalkit.pricing import guardrail_cost_estimate, token_cost
 
 REGION = "us-east-1"
 CHARS_PER_TOKEN_ESTIMATE = 4
@@ -124,6 +124,49 @@ class Bedrock:
             "called_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         }
         self._account(model_id, record["usage"]["input_tokens"], record["usage"]["output_tokens"])
+        with open(path, "w") as f:
+            json.dump(record, f, indent=2)
+        return record
+
+    def apply_guardrail(self, guardrail_id, version, source_text, query_text, answer_text, trial=0):
+        """ApplyGuardrail on an OUTPUT with grounding qualifiers, cached like converse().
+
+        Priced as an estimate (the API returns usage in policy units, kept on the
+        record): content, topic and PII policies on the answer's text units, plus
+        grounding on source + query + answer. A text unit is up to 1,000 characters.
+        """
+        key = canonical_digest({"guardrail": guardrail_id, "version": version, "source": source_text,
+                                "query": query_text, "answer": answer_text, "trial": trial})
+        path = os.path.join(self.cache_dir, f"guardrail-{key}.json")
+        if os.path.exists(path):
+            self.cache_hits += 1
+            with open(path) as f:
+                return json.load(f)
+        if self.calls >= self.max_calls:
+            raise BudgetExceeded(f"max_calls={self.max_calls} reached; raise it deliberately or stop")
+        self.calls += 1
+        self.cost_usd += guardrail_cost_estimate(source_text, query_text, answer_text)
+        if self.dry_run:
+            return None
+
+        response = self.client.apply_guardrail(
+            guardrailIdentifier=guardrail_id, guardrailVersion=version, source="OUTPUT",
+            content=[
+                {"text": {"text": source_text, "qualifiers": ["grounding_source"]}},
+                {"text": {"text": query_text, "qualifiers": ["query"]}},
+                {"text": {"text": answer_text, "qualifiers": ["guard_content"]}},
+            ],
+        )
+        assessment = (response.get("assessments") or [{}])[0]
+        filters = (assessment.get("contextualGroundingPolicy") or {}).get("filters", [])
+        record = {
+            "trial": trial,
+            "action": response.get("action"),
+            "grounding": next((f.get("score") for f in filters if f.get("type") == "GROUNDING"), None),
+            "relevance": next((f.get("score") for f in filters if f.get("type") == "RELEVANCE"), None),
+            "usage": response.get("usage"),
+            "called_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        }
         with open(path, "w") as f:
             json.dump(record, f, indent=2)
         return record

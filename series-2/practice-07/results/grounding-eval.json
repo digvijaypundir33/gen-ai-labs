@@ -1,0 +1,533 @@
+{
+  "items": [
+    {
+      "item_id": "q01-lambda-concurrency",
+      "blocked": false,
+      "answer_is_regenerated_draft": false,
+      "answer": "The default total concurrency limit for Lambda functions in an AWS account is 1,000 units of concurrency [Source 1]. This limit applies to the total amount of concurrency that you can use across all functions in a Region. \n\nHere's a breakdown of the concurrency quotas:\n\n- **Account Level**: By default, your functions can have up to 1,000 units of concurrency across all functions in your AWS account.\n- **Function Level**: By default, you can reserve up to 900 units of concurrency across all your functions. Lambda always reserves 100 units of concurrency for functions that don't explicitly reserve concurrency.\n\nTo check your current account-level concurrency quota, you can use the AWS CLI command:\n```sh\naws lambda get-account-settings\n```\n\nThe output will include the `ConcurrentExecutions` value, which represents your total account-level concurrency quota.",
+      "stage3_grounding": 0.94,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            6,
+            6,
+            5
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            7,
+            7,
+            7
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        }
+      },
+      "grounding_scores": [],
+      "grounding_range": null,
+      "grounding_passes": 0
+    },
+    {
+      "item_id": "q02-lambda-concurrency",
+      "blocked": false,
+      "answer_is_regenerated_draft": false,
+      "answer": "The two phases an execution environment goes through when handling a Lambda request are the **Init phase** and the **Invoke phase**. \n\n- **Init phase**: This is the initialization phase where Lambda sets up the execution environment. During this phase, Lambda runs the code outside your main handler. This phase is necessary for the first request to the function, as it initializes the environment. For subsequent requests, if the environment is already initialized, this phase is skipped. [Source 2]\n\n- **Invoke phase**: This is the phase where Lambda runs your function's main handler code to process the request. This phase follows the Init phase and is where the actual function execution occurs. [Source 2]",
+      "stage3_grounding": 0.93,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            5,
+            4,
+            5
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            8,
+            7,
+            7
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        }
+      },
+      "grounding_scores": [],
+      "grounding_range": null,
+      "grounding_passes": 0
+    },
+    {
+      "item_id": "q03-s3-versioning",
+      "blocked": false,
+      "answer_is_regenerated_draft": false,
+      "answer": "The S3 SOAP API does not support S3 Versioning. [Source 1] states that \"The SOAP API does not support S3 Versioning.\" This means that you cannot use the SOAP API to manage versioned objects in Amazon S3. Instead, you must use the REST API or one of the AWS SDKs to work with versioned objects.",
+      "stage3_grounding": 0.89,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            3,
+            3,
+            3
+          ],
+          "hallucination_rate": [
+            0.3333333333333333,
+            0.3333333333333333,
+            0.0
+          ],
+          "flagged": true,
+          "unsupported_claims": [
+            "Instead, you must use the REST API or one of the AWS SDKs to work with versioned objects."
+          ]
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            3,
+            3,
+            3
+          ],
+          "hallucination_rate": [
+            0.3333333333333333,
+            0.3333333333333333,
+            0.3333333333333333
+          ],
+          "flagged": true,
+          "unsupported_claims": [
+            "Instead, you must use the REST API or one of the AWS SDKs to work with versioned objects."
+          ]
+        }
+      },
+      "grounding_scores": [
+        0.89,
+        0.89,
+        0.89,
+        0.89,
+        0.89
+      ],
+      "grounding_range": 0.0,
+      "grounding_passes": 5
+    },
+    {
+      "item_id": "q04-s3-versioning",
+      "blocked": false,
+      "answer_is_regenerated_draft": false,
+      "answer": "No, S3 Versioning is not turned on by default when you create a bucket. By default, S3 Versioning is disabled on buckets, and you must explicitly enable it. [Source 1]",
+      "stage3_grounding": 0.91,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            2,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.5,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": [
+            "S3 Versioning is turned on by default when you create a bucket."
+          ]
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            2,
+            2,
+            2
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        }
+      },
+      "grounding_scores": [],
+      "grounding_range": null,
+      "grounding_passes": 0
+    },
+    {
+      "item_id": "q05-dynamodb-on-demand-capacity",
+      "blocked": false,
+      "answer_is_regenerated_draft": false,
+      "answer": "According to the provided source, you can switch a DynamoDB table from provisioned capacity mode to on-demand mode up to four times in a 24-hour rolling window [Source 1].\n\nHere is the relevant excerpt from the source:\n```\nYou can switch tables from provisioned capacity mode to on-demand mode up to four times in a 24-hour rolling window.\n```",
+      "stage3_grounding": 0.98,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            1,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            1,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        }
+      },
+      "grounding_scores": [],
+      "grounding_range": null,
+      "grounding_passes": 0
+    },
+    {
+      "item_id": "q06-dynamodb-on-demand-capacity",
+      "blocked": false,
+      "answer_is_regenerated_draft": false,
+      "answer": "In DynamoDB on-demand mode, one write request unit represents one write operation per second for an item up to 1 KB in size. [Source 1]",
+      "stage3_grounding": 0.96,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            1,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            1,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        }
+      },
+      "grounding_scores": [
+        0.96,
+        0.96,
+        0.96,
+        0.96,
+        0.96
+      ],
+      "grounding_range": 0.0,
+      "grounding_passes": 5
+    },
+    {
+      "item_id": "q07-bedrock-knowledge-base",
+      "blocked": true,
+      "answer_is_regenerated_draft": true,
+      "answer": "The two types of Amazon Bedrock Knowledge Bases are:\n\n1. **Managed Knowledge Base** - Amazon Bedrock manages the underlying data ingestion, indexing, storage, and retrieval infrastructure. This allows you to focus on your application and agent logic. Managed Knowledge Base offers advanced capabilities including ingestion of multi-modal data, storage auto-scaling, agentic retrieval for multi-hop reasoning, and more. It also provides key customizations to tailor agents to your use case. Managed Knowledge Base integrates natively with AgentCore Gateway, enabling any MCP-compatible agent framework to discover and invoke your Knowledge Base as a tool without custom code. It also supports connectors for various data sources like Amazon S3, SharePoint, Confluence, Google Drive, OneDrive, and Web Crawler, along with document-level permission filtering using Access Control Lists (except for Web Crawler) at retrieval time. The Smart Parsing feature auto-selects parsing strategy per document type, and Agentic Retrieval supports multi-hop reasoning. Native integration with AgentCore Observability offers built-in monitoring, retrieval traces, agentic traces, and per-knowledge base metrics. [Source 1]\n\n2. **Customer-managed Knowledge Base** - This type enables you to set up and manage your own RAG pipeline, including the vector store (such as Amazon OpenSearch Serverless, Amazon Aurora, and Amazon Neptune), and have full control over data ingestion, parsing, indexing, and storage configurations. However, you will need to setup and manage related infrastructure and configurations such as parsing for multimodal data. Note that several capabilities such as third-party connectors, document-level permissions, and native AgentCore Gateway integration are only available for Managed Knowledge Bases. [Source 1]",
+      "stage3_grounding": 0.42,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            13,
+            15,
+            13
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            15,
+            12,
+            15
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        }
+      },
+      "grounding_scores": [],
+      "grounding_range": null,
+      "grounding_passes": 0
+    },
+    {
+      "item_id": "q08-stepfunctions-amazon-states-language",
+      "blocked": false,
+      "answer_is_regenerated_draft": false,
+      "answer": "When defining Step Functions state machines outside the AWS Step Functions console, such as in an editor of your choice, you must save your state machine definitions with the file extension ***.asl.json***. [Source 1]",
+      "stage3_grounding": 0.97,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            1,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            1,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        }
+      },
+      "grounding_scores": [],
+      "grounding_range": null,
+      "grounding_passes": 0
+    },
+    {
+      "item_id": "q09-apigateway-caching",
+      "blocked": false,
+      "answer_is_regenerated_draft": false,
+      "answer": "The default cache Time-To-Live (TTL) for API Gateway response caching is 300 seconds. [Source 1]",
+      "stage3_grounding": 0.99,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            1,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            1,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        }
+      },
+      "grounding_scores": [],
+      "grounding_range": null,
+      "grounding_passes": 0
+    },
+    {
+      "item_id": "q10-apigateway-caching",
+      "blocked": true,
+      "answer_is_regenerated_draft": true,
+      "answer": "When you turn on caching for an API Gateway stage, only `GET` methods have caching enabled by default. [Source 1][Source 2]",
+      "stage3_grounding": 0.43,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            1,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            1,
+            1,
+            1
+          ],
+          "hallucination_rate": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "flagged": false,
+          "unsupported_claims": []
+        }
+      },
+      "grounding_scores": [
+        0.92,
+        0.92,
+        0.92,
+        0.92,
+        0.92
+      ],
+      "grounding_range": 0.0,
+      "grounding_passes": 5
+    },
+    {
+      "item_id": "probe-snapstart",
+      "blocked": true,
+      "answer_is_regenerated_draft": true,
+      "answer": "The provided reference material does not specify the exact millisecond value of Lambda SnapStart's cold start improvement. However, it does mention that Lambda SnapStart uses cached snapshots of your execution environment to significantly improve startup performance. To gain precise details about the performance improvement in milliseconds, you would need to refer to the official AWS documentation or other authoritative sources on Lambda SnapStart. [Source 1]",
+      "stage3_grounding": 0.56,
+      "claims": {
+        "amazon.nova-micro-v1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            3,
+            3,
+            3
+          ],
+          "hallucination_rate": [
+            0.3333333333333333,
+            0.3333333333333333,
+            0.3333333333333333
+          ],
+          "flagged": true,
+          "unsupported_claims": [
+            "To gain precise details about the performance improvement in milliseconds, you would need to refer to the official AWS documentation or other authoritative sources on Lambda SnapStart."
+          ]
+        },
+        "openai.gpt-oss-120b-1:0": {
+          "usable_runs": 3,
+          "parse_failures": 0,
+          "claims_per_run": [
+            3,
+            3,
+            3
+          ],
+          "hallucination_rate": [
+            0.3333333333333333,
+            0.3333333333333333,
+            0.3333333333333333
+          ],
+          "flagged": true,
+          "unsupported_claims": [
+            "To gain precise details about the performance improvement in milliseconds, you would need to refer to the official AWS documentation or other authoritative sources on Lambda SnapStart."
+          ]
+        }
+      },
+      "grounding_scores": [
+        0.79,
+        0.79,
+        0.79,
+        0.79,
+        0.79
+      ],
+      "grounding_range": 0.0,
+      "grounding_passes": 5
+    }
+  ],
+  "prediction_4a_flagged_but_grounding_passed": [
+    "q03-s3-versioning",
+    "probe-snapstart"
+  ],
+  "prediction_4b_grounding_range_gt_0_2": [],
+  "grounding_ranges": {
+    "q03-s3-versioning": 0.0,
+    "q06-dynamodb-on-demand-capacity": 0.0,
+    "q10-apigateway-caching": 0.0,
+    "probe-snapstart": 0.0
+  }
+}

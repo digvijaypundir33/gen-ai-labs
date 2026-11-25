@@ -17,4 +17,5 @@ Every AWS change this practice makes, with its idle cost and how to undo it. Reg
 | 0 | ~8 one-word "Reply with OK" probe calls | < $0.001 |
 | 3 | 2 smoke-test `generate` calls + 30 collection calls | ~$0.061 estimated at P05's $0.0019 per `/ask` request. Measured parts: $0.0065 answer model (34,605 in / 1,815 out tokens) + ~$0.022 grounding (~219 text units) |
 | 5 | 660 judge calls (Nova Micro + `gpt-oss-120b`), run in 3 chunks after a background run was cut off by a session restart. The cache meant no call was paid for twice | ~$0.048 measured from token usage ($0.0072 pilot + $0.017 + $0.023 + ~10 calls before the cut-off) |
+| 6 | 1 `generate` call (probe) + 3 regenerated drafts (Nova Lite) + 66 claim-check calls (Nova Micro + `gpt-oss-120b`) + 20 `ApplyGuardrail` calls | $0.057 (tokens measured; guardrail estimated from text units) + ~$0.002 |
 | 4 | 4 evaluation jobs: 1 test, 2 Q&A with robustness perturbations, 1 RAG judge over 10 items × 4 metrics | < $0.02 estimated; the jobs don't report token usage. To confirm against Cost Explorer at wrap-up |

@@ -1,23 +1,27 @@
-⚖️ I ran an LLM judge 5 times per answer to make it "rigorous". It gave the same score every time, and it was still wrong.
+⚖️ How do you know your AI assistant's answers are actually good? Usually by asking another AI to grade them. But who checks the grader?
 
-This is Part 1 of the first practice in my second series: building an evaluation system for my RAG assistant on Amazon Bedrock. Before building anything, I wrote down 5 predictions and committed them to git, so I couldn't adjust them after seeing the data. Two have already missed.
+🧩 The problem
+Most GenAI evaluation comes down to one of two things: a managed score from your cloud provider, or an "LLM-as-judge" that rates each answer once. Both produce clean-looking numbers. Almost nobody checks whether those numbers measure what they claim to, or whether two different graders would even agree.
 
-1️⃣ AWS's managed evaluation couldn't tell two models apart. Bedrock's built-in Q&A score gave Nova Micro 0.104 and Nova Lite 0.118, well inside the noise. My own earlier benchmark had "ranked" them too. That ranking was never real.
+🛠️ What I built
+An evaluation lab for my RAG assistant on Amazon Bedrock, which answers AWS questions from a Knowledge Base, with a Guardrail in front.
+• Collected 30 real answers from the live system and saved them, so every grader scores exactly the same answers.
+• Ran Bedrock's managed evaluation on them: automatic Q&A scoring, plus an LLM judge built for RAG.
+• Built my own judge on 6 quality dimensions, using two different model families, running every judgment 5 times.
+• Wrote down 5 predictions and committed them to git before any data existed, so I couldn't adjust them afterwards.
 
-2️⃣ I expected judge noise to be the problem: in an earlier practice, single samples fooled me into a false finding. So I ran every judgment 5 times. At temperature 0.2, the scores barely moved (only 2–3% varied).
+🔍 What it showed
+1️⃣ Bedrock's managed Q&A score couldn't tell two models apart (0.104 vs. 0.118), and neither could my earlier benchmark. That earlier "ranking" was never real.
+2️⃣ Running a judge 5 times didn't help. At temperature 0.2 its scores barely moved; the real problem was bias. Two judges disagreed on the same answer every single run, by ~4× their own noise.
+3️⃣ The more accurate judge's one mistake was the costliest kind: it marked a true fact as false, because the fact wasn't in the short reference answer it was given.
+4️⃣ The cheaper judge's "6 dimensions" were really one: every answer got all 5s or all 1s.
+5️⃣ Two of my own predictions missed. That's the point of writing them down first.
 
-3️⃣ The real problem was bias. Two different judge models disagreed on the same answer *every single run*. The gap between the judges was ~4× either judge's run-to-run noise. Running a biased judge five times just repeats its mistake five times.
+🐛 Collecting the data also exposed a real bug: a "use the bigger model" override that a code comment said was internal-only was reachable from the public API. Anyone could have requested the model that costs 13× more. Fixed.
 
-4️⃣ I checked the disagreements by hand. The "better" judge was right 5 times out of 6, but its one miss was on factual accuracy: it called a true claim false, because the claim wasn't in the short reference answer it was given. It was word for word in the AWS source document.
+💰 Total cost: about $0.13.
 
-5️⃣ The cheaper judge didn't really score 6 dimensions. Every normal answer got 5/5 on everything, and every blocked answer got 1/5 on everything, including "fluency" for a perfectly fluent refusal. Six dimensions, one bit of information.
-
-🐛 Bonus bug: collecting test data exposed that an internal "pick a bigger model" override from a previous practice was reachable from the public API. A code comment said it wasn't, but nobody had ever checked. Anyone could have asked for the model that costs 13× more. Fixed.
-
-💰 Total spend so far: about $0.13.
-
-Part 2 tomorrow: claim-by-claim hallucination checks, and a quality gate I'll try to break on purpose.
-
+Everything is in the repo: the code, the raw results, the scored predictions and every bug 👇
 🔗 https://github.com/digvijaypundir33/gen-ai-labs
 
 #awsexamprep #genai #aws #bedrock #llmevaluation

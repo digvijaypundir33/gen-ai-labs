@@ -326,7 +326,48 @@ the actual cost was ~$0.05.
 - **Efficiency metrics** (Module 2): `quality_per_token` and `quality_per_second`, from real
   `usage` and latency.
 
-### - [ ] Stage 6: Claim-level hallucination checks vs. managed grounding (~$0.10)
+### - [x] Stage 6: Claim-level hallucination checks vs. managed grounding (~$0.06, done 2026-11-25)
+
+Script: `grounding_eval.py`. Results are in `results/grounding-eval.json` and
+`results/grounding-eval-report.txt`. Kept cheap on purpose: claim checks first, with 11 answers ×
+3 runs × 2 judges, given the retrieved passages (the gap Stage 5 exposed). The guardrail
+(`ApplyGuardrail`, ~$0.001 a call) ran 5 times only on flagged answers, q10, P05's probe and one
+control. 89 calls for $0.057, plus one `generate` call for the probe.
+
+**Results:**
+- **Prediction 4a held.** q03 was flagged by *both* judges on every run for "Instead, you must use
+  the REST API or one of the AWS SDKs…", which isn't in the retrieved passages. The guardrail
+  passed the same answer at **0.89 on all 5 runs**. This is the same catch the managed RAG judge
+  made in Stage 4 (faithfulness 0.75). A single grounding number can't say *which* sentence is
+  unsupported; the claim check can. The probe was also flagged, but its flagged claim is "refer to
+  the official documentation", which is advice, not a factual hallucination. So the probe doesn't
+  count towards 4a.
+- **Prediction 4b missed, and it corrects P05.** With the answer text held fixed, the grounding
+  score was **identical across all 5 runs** for every answer tested (q03 0.89, q06 0.96, q10 0.92,
+  probe 0.79; range 0.00). P05's "5 identical calls scored 0.54–0.80" regenerated the answer on
+  every call, and Stage 3 showed Nova Lite's answers vary even at temperature 0. **The scorer is
+  deterministic; the variation came from the generated answer.** P05's README attributes it to the
+  score itself; a visible correction belongs there. Caveats: 4 answers, guardrail v5 vs. P05's v1.
+- **The q10 false block is still unresolved, and why is itself a finding.**
+  - q10 was blocked 3/3 in Stage 3 at grounding 0.43.
+  - A draft regenerated today with the same passages and question passes at **0.92, 5/5**, and
+    every claim in it is supported. Since the scorer is deterministic, the original hidden draft
+    must have been a *different text* that scored 0.43.
+  - The regeneration put the passages and instruction in one text block, where `generate` uses
+    two `guardContent` blocks. That difference alone could change Nova Lite's wording.
+  - The original draft can't be recovered: Bedrock replaces a blocked answer, and `generate`
+    doesn't log it. **A guardrail block destroys the evidence needed to judge whether it was
+    right.** The same pattern shows up on the probe: blocked live, but its regenerated draft
+    (which correctly says the passages don't cover the figure) passes at 0.79.
+  - q07 was blocked at 0.27–0.42 live, and its regenerated draft has 12–15 claims, all supported.
+- **The judges agreed this time.** With the passages in hand, Nova Micro and `gpt-oss` agreed on
+  every flag. The only slip was Nova Micro once inverting a q04 claim ("Versioning is turned on by
+  default", where the answer said the opposite). It didn't reach a majority, so it wasn't flagged.
+
+**Open follow-up (not run, pending approval):** `generate`'s `include_debug` could also return
+the guardrail trace's `modelOutput`, the model's original text before the block. That means one
+redeploy and 3 `generate` calls (~$0.006), and it would settle q07, q10 and the probe on the real
+drafts.
 
 - **Claim checks:** split each answer into individual claims, then label each one *supported*,
   *contradicted* or *not mentioned* against the retrieved context. Run this 3 times, and
