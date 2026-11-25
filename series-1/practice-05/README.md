@@ -122,6 +122,16 @@ directly proved the grounding filter's **score itself is non-deterministic**: 5 
 would worsen false positives on legitimate elaborated answers without reliably fixing noise-driven
 misses.
 
+> **Correction (2026-11-25, found in [Practice 07](../../series-2/practice-07/) Stage 6):**
+> the score is *not* non-deterministic. Those "5 identical calls" each **regenerated the answer**,
+> and Nova Lite's answers vary even at temperature 0 (Practice 07 Stage 3: different answers on
+> 5 of 10 questions from identical retrieved passages). With the answer text held fixed,
+> `ApplyGuardrail` returned the **same grounding score on all 5 runs** for every answer tested
+> (q03 0.89, q06 0.96, q10 0.92, probe 0.79). The variance is real, but it comes from generation,
+> not from the scorer. The threshold decision above still holds, because what the guardrail sees
+> in production is a fresh answer every time. Caveat: 4 answers tested, on guardrail v5 rather
+> than this practice's v1.
+
 ### Stage 8 — Structured output validation (built and verified live)
 
 Built a `jsonschema` Lambda Layer and wired real schema validation into `moderation-llm-check`

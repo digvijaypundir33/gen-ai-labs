@@ -15,6 +15,20 @@ Every AWS change this practice makes, with its idle cost and how to undo it. Reg
 | 9 | 8 | **EventBridge rule `rag-assistant-eval-gate-schedule`**: `rate(7 days)` → the gate in live mode. **Created DISABLED**, so it only runs when invoked by hand. | `aws events put-rule --state DISABLED` + `put-targets` + `lambda add-permission` | $0 (disabled) | `aws events remove-targets --rule rag-assistant-eval-gate-schedule --ids gate && aws events delete-rule --name rag-assistant-eval-gate-schedule` |
 | 4 | 4 | **Evaluation jobs** `p07-smoke-…`, `p07-qa-micro-…`, `p07-qa-lite-…`, `p07-judge-…`. These are metadata records only; their output lives in the bucket above. | `managed_eval.py submit <job>` | $0 idle (inference billed once, at run time) | Deleted with the bucket. The job records themselves can't be deleted, and cost nothing. |
 
+## Teardown status (2026-11-25)
+
+| Resource | Status |
+|---|---|
+| `generate` change (row 1) | **Kept.** The debug flag is opt-in and direct-invoke only, and the security fix stays |
+| Bucket `rag-assistant-eval-156207843797` (row 2) | **Deleted**, after confirming all 11 objects are committed under `results/` |
+| Role `rag-assistant-eval-role` (row 3) | **Deleted** |
+| Evaluation jobs (row 4) | Records remain; they can't be deleted and cost nothing |
+| Table `EvaluationResults` (row 5) | **Kept** for Practices 08–11. $0 idle |
+| Topic, gate role, gate Lambda and its log group, disabled rule (rows 6–9) | **Kept** for Practices 08–11. $0 idle; the rule is still DISABLED |
+
+The verification sweep covered S3, IAM, DynamoDB, Lambda, EventBridge, SNS **and CloudWatch Logs**,
+the check P01's teardown missed.
+
 ## Spend so far
 
 | Stage | Calls | Cost |

@@ -11,16 +11,24 @@ Guardrail blocks anything unsafe or ungrounded. Every evaluation in Series 1 was
 that printed a number once. This practice builds evaluation that is repeated, stored and able to
 gate a release. On the way, it **tests the evaluators themselves**.
 
-**The short version so far:** neither Bedrock's managed Q&A score nor my own Practice 01 benchmark
-could tell Nova Micro from Nova Lite. An LLM judge at temperature 0.2 turned out to be nearly
-deterministic but *biased*: two judges disagreed on the same answer every single run, so running
-each five times just repeated each mistake five times. Two of my five written predictions have
-already missed.
+**The short version:**
+- **Neither scorer could separate the models.** Bedrock's managed Q&A score and my own Practice 01
+  benchmark both failed to tell Nova Micro from Nova Lite.
+- **LLM judges are consistent but biased.** At temperature 0.2 a judge is nearly deterministic, and
+  two judges disagreed on the same answer every single run. Running each five times just repeated
+  its mistake five times.
+- **Checking claim by claim catches what a single score can't.** It found an unsupported sentence
+  that the guardrail's grounding score passed on every run.
+- **The grounding score isn't random after all, which corrects Practice 05.** Hold the answer fixed
+  and it never moves; the variation came from regenerating answers.
+- **The quality gate passed a regression I created on purpose.** 7 of 10 answers were truncated
+  mid-sentence, but a single-fact test set couldn't see it.
+- **Four of my nine scored predictions missed,** and one more held only trivially.
 
-**Status: Part 1 of 2.** Stages 0–5 are built and measured. Stages 6–9 are still to come:
-claim-level hallucination checks, stored results, and a quality gate proven by breaking the
-system on purpose. Resources and teardown are in [`SETUP-LOG.md`](./SETUP-LOG.md); stage-by-stage
-detail is in [`PLAN.md`](./PLAN.md).
+**Status: complete.** Stages 0–8 are built and measured; Stage 9 is this write-up and the teardown.
+Two stages were moved out when the practice was trimmed: agent metrics → Practice 11, and the
+troubleshooting methodology → the Series 2 wrap-up. Resources and teardown are in
+[`SETUP-LOG.md`](./SETUP-LOG.md); stage-by-stage detail is in [`PLAN.md`](./PLAN.md).
 
 ---
 
@@ -37,11 +45,13 @@ it prevents.
   sent. Prices come from the AWS Price List API.
 - **Raw results are committed.** Every number below can be re-rendered from
   [`results/`](./results/) without calling AWS.
-- **Offline tests:** 37 pytest tests run with AWS credentials switched off.
+- **Offline tests:** 52 pytest tests run with AWS credentials switched off.
 
 ## Cost
 
-**About $0.13 so far**, against a budget of $0.50 for the whole practice. Nothing created bills
+**About $0.27 estimated and ~$0.17 billed so far**, against a budget of $0.50. The estimate leans
+high on purpose. The billed figure is from Cost Explorer on 2026-11-25; it covers the whole account
+and lags 24–48 hours, so the last day's gate runs aren't in it yet. What's still running costs $0
 while idle.
 
 | Stage | Cost |
@@ -50,6 +60,12 @@ while idle.
 | 3: 32 live `generate` calls | ~$0.06 (estimated; the measured answer-model and grounding parts come to $0.03) |
 | 4: four Bedrock evaluation jobs | < $0.02 |
 | 5: 660 judge calls | $0.048 (measured from token usage) |
+| 6: 89 claim-check and guardrail calls | ~$0.06 |
+| 7: 335 DynamoDB writes | ~$0 |
+| 8: gate baseline + 5 gate runs | ~$0.08 |
+
+Billed, by service (account-wide): Bedrock $0.120, Bedrock Knowledge Base $0.044, S3 $0.006,
+DynamoDB $0.0001, Cost Explorer queries $0.02.
 
 The plan had budgeted Mistral Large as the second judge. The Price List API put it at $4/$12 per
 million tokens, about 67× Nova Lite, so `gpt-oss-120b` ($0.15/$0.60) replaced it. Claude couldn't be
@@ -183,17 +199,98 @@ Two near-misses along the way:
 - **"Quality per token" mostly measures brevity.** Quality sits at the 5/5 ceiling for every
   unblocked answer, so the ratio just ranks how short the answer is.
 
-### Stages 6–9 — still to come (Part 2)
+### Stage 6 — Claim-by-claim checks vs. the guardrail's single grounding score
 
-- **Stage 6:** claim-by-claim hallucination checks vs. the guardrail's single grounding score. Is
-  q10's block a false positive?
-- **Stage 7:** results stored in DynamoDB.
-- **Stage 8:** a quality gate, verified by deliberately degrading the system and checking it fails.
-- **Stage 9:** the full write-up, the remaining predictions scored, and teardown.
+[`grounding_eval.py`](./grounding_eval.py) checks each answer claim by claim. One call per answer
+lists the factual claims and labels each one *supported*, *contradicted* or *not mentioned* against
+the retrieved passages: 3 runs, with Nova Micro and `gpt-oss-120b`. This time the judges get the
+passages, which is the gap that made `gpt-oss` mark a true fact false in Stage 5. To keep cost
+down, the guardrail (~$0.001 a call) was re-run 5 times only where it mattered. Blocked answers had
+their hidden draft regenerated once, with `generate`'s prompt and no guardrail, so their claims
+could be checked at all.
+
+**What it found:**
+- **Claim checks name the sentence a single score can't.** Both judges flagged q03's "Instead, you
+  must use the REST API or one of the AWS SDKs…" on every run, because it isn't in the passages.
+  The guardrail passed the same answer at 0.89 on all 5 runs. Bedrock's RAG judge had caught the
+  same sentence in Stage 4.
+- **With the passages in hand, the two judges agreed.** Their only slip was Nova Micro once
+  inverting a claim ("Versioning is on by default", where the answer said the opposite). That was 1
+  run of 3, so it was outvoted.
+- **The grounding score is deterministic, which corrects Practice 05.** With the answer text held
+  fixed, every answer tested scored exactly the same on all 5 runs (q03 0.89, q06 0.96, q10 0.92,
+  probe 0.79). Practice 05's "identical calls scored 0.54–0.80" had regenerated the answer each
+  time. [Corrected in its README](../../series-1/practice-05/README.md).
+- **A guardrail block destroys the evidence needed to judge it.** q10 was blocked live at 0.43,
+  yet a regenerated draft passes at 0.92 with every claim supported. The scorer is deterministic,
+  so the original must have been a different text, and nobody can now check it: Bedrock replaces
+  a blocked answer, and `generate` doesn't log it. q07 and the hallucination probe show the same
+  pattern. Not run, to save cost: the guardrail trace's `modelOutput` holds the original draft,
+  and returning it from `include_debug` would settle all three.
+
+### Stage 7 — Results stored in DynamoDB
+
+[`store_results.py`](./store_results.py) loads Stages 4–6 from the committed files, with no model
+calls, into an on-demand `EvaluationResults` table: **335 rows across 9 runs**, each run with its
+description and cost. A score that came back empty is stored with `n=0` rather than dropped, so
+"the judge silently returned nothing" stays visible in the data.
+
+**The first load lied.** It printed "wrote 335 rows" and the table held 303. The Q&A results label
+questions by *document*, two questions share each of four documents, and DynamoDB silently
+overwrote the colliding rows. A duplicate-key test caught it. The loader now refuses colliding
+keys, removes stale ones and checks the read-back count.
+
+### Stage 8 — A quality gate, and the regression it missed
+
+[`lambda/eval-quality-gate/`](./lambda/eval-quality-gate/) is a Lambda with two modes:
+- **`live`** scores the deployed system.
+- **`candidate`** scores a *proposed* config before it ships. It regenerates answers from the
+  stored passages and runs them through the production guardrail, so blocks count as they would
+  live.
+
+It scores each answer on factual accuracy and completeness, 3 runs, compares the result with the
+baseline stored in the table, writes its result back, and publishes an SNS alert on FAIL. The
+baseline is the same scorer on Stage 3's 3 runs (4.13, 4.13, 3.73), so the threshold is mean 4.00 −
+2 × sd = **3.54**. That tolerates one extra guardrail block and fails on more. A weekly schedule
+exists but was created **disabled**: a gate that runs on a timer for nobody is spend without
+purpose.
+
+| Run | Score | Result |
+|---|---|---|
+| Live, deployed system | 4.10 | PASS |
+| Production config as a candidate (×2) | 4.50, 4.50 | PASS |
+| **Deliberate regression: Nova Micro, 40-token limit** | **4.63** | **PASS ← it should have failed** |
+| Fail-path check, added afterwards: 10-token limit | 2.40 | FAIL, alert published |
+
+**The gate passed a config I knew was worse.**
+- 7 of the 10 degraded answers stop mid-sentence ("This limit can…").
+- But every golden question asks for one fact with a one-line reference, and the fact lands in
+  the first 40 tokens. A factual-accuracy and completeness rubric can't see truncation.
+- Shorter answers also drew **zero guardrail blocks**, so the broken config outscored production.
+- **A gate is only as strong as its test set.** This one can't tell a 40-token config from a
+  500-token one.
+- Two cheap fixes, not built: flag answers that hit the token limit (`stopReason ==
+  max_tokens`), and add golden questions that need more than one fact.
+
+The 10-token run is clearly labelled as an after-the-fact check, so the fail path, the stored rows
+and the alert are verified. The alert topic deliberately has no subscriber: the publish is
+confirmed (a message ID, and CloudWatch counts 1 message published), delivery isn't.
+
+**One caveat:** candidate mode is slightly optimistic (4.50 vs. 4.10 live). It sends the prompt
+as one text block, and `generate` uses two.
+
+### Stage 9 — Wrap-up and teardown
+
+- **Kept for Practices 08–11, all $0 while idle:** `EvaluationResults`, the gate Lambda and its
+  role, the disabled schedule and the alert topic.
+- **Deleted:** the evaluation-job bucket and its IAM role, after confirming every object is
+  committed under `results/`.
+- **Teardown check:** it included CloudWatch Logs this time. The gate's log group has 14-day
+  retention.
 
 ---
 
-## Predictions scored so far
+## Predictions scored
 
 From [`PREDICTIONS.md`](./PREDICTIONS.md), committed before Stage 3's first model call.
 
@@ -204,13 +301,20 @@ From [`PREDICTIONS.md`](./PREDICTIONS.md), committed before Stage 3's first mode
 | 3a | ≥ 20% of cells vary by ≥ 1 point across five runs | ❌ **Missed.** 2–3% |
 | 3b | The single-run score falls outside its own five-run range at least once | ✅ Held, but trivially: 1 of 60 cells, by one point on fluency |
 | 3c | Which judge you pick matters *less* than how many times you run it | ❌ **Missed: the opposite happened.** The gap between judges was ~4× the spread within either judge |
-| 4 | Claim-level checks catch a hallucination the managed grounding score passes | Stage 6 |
-| 5 | The quality gate fails on a degraded configuration and never on the normal one | Stage 8 |
+| 4a | Claim-level checks flag an unsupported claim in an answer the grounding score passed | ✅ **Held.** q03, flagged by both judges on every run; grounding passed it at 0.89, 5 of 5 |
+| 4b | The grounding score for one answer ranges by > 0.2 across five runs | ❌ **Missed.** Range 0.00 on every answer tested. The scorer is deterministic, which corrects Practice 05 |
+| 5 | The gate fails the degraded config and passes all 3 normal runs | ❌ **Half missed.** 3 of 3 normal runs passed, but the degraded config (Nova Micro, 40 tokens) passed too |
+| Cost | The whole practice costs under $0.50 | ✅ **Held.** ~$0.27 estimated, ~$0.17 billed so far |
 
-The two misses are one mistake. I expected the judges' noise to be the problem, because in
-Practice 05 single samples were unreliable. But that unreliability came from the *system being
-tested*. The judge's own risk turned out to be bias, which repetition can't fix. Only a second judge
-or a human exposes it.
+**Four misses, and they share a cause.** Each time, I expected *noise* to be the problem, because
+Practice 05 had been fooled by single samples. But that noise came from the system being tested,
+not from the instruments:
+- the judges are consistent but biased (3a, 3c);
+- the grounding scorer doesn't vary at all (4b);
+- the gate is consistent but blind to what its test set can't express (5).
+
+The risks that mattered were bias and coverage, and repetition fixes neither. Only a second judge,
+a human, or a better test set does.
 
 ## Reference-code review
 
@@ -240,8 +344,13 @@ copied:
 | 5 | Managed judge | One cell had an explanation but no score: an empty result that looks like a normal one |
 | 6 | Golden set (P02) | Some references are broader than their question, which penalises correct answers on completeness |
 | 7 | Nova Lite | Temperature 0 gave different answers on 5 of 10 questions |
-| 8 | Guardrail | q10 was blocked at 0.43 grounding although the passage contains the answer. Probably a false block; Stage 6 checks it |
+| 8 | Guardrail | q10 was blocked at 0.43, but a regenerated draft passes at 0.92 with every claim supported. The original can't be checked: Bedrock replaces blocked answers and `generate` doesn't log them |
 | 9 | Assignment judge | The verbose JSON schema came back structurally broken in 2 of 60 replies |
 | 10 | P01 benchmark | Its "similarity" is word recall, which favours long answers |
 | 11 | Mine | The pilot reported "expected doc retrieved 0/3" because retrieved names carry `.md` and the golden set doesn't. Caught before the full run |
 | 12 | Mine | I deployed without the rollback zip I'd assumed was saved; it was lost when the scratchpad was cleared. The previous version was in git, and it's now the documented rollback |
+| 13 | P05 write-up | "The grounding score is non-deterministic" was really answer variation; the scorer is deterministic. **Corrected** in the Practice 05 README |
+| 14 | Mine (loader) | The first DynamoDB load reported 335 rows and stored 303: colliding keys silently overwrote each other. Caught by a test and fixed |
+| 15 | Mine (process) | A commit command piped pytest through `tail`, which hid a failing test's exit status, so it committed anyway. Caught on the next line of output and fixed before pushing |
+| 16 | Golden set (P02) | Every question asks for a single fact, so no rubric over it can detect truncated answers. The gate passed a 40-token config |
+| 17 | Gate | Candidate mode is slightly optimistic compared with live (one prompt block vs. two) |

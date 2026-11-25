@@ -487,7 +487,16 @@ the result. Two stages moved, and none were dropped:
   added a publicly reachable override, a Knowledge Base scoped to the whole bucket, and a 4 KB
   quota that would have rejected the first dataset. So it's stronger written once, at the end.
 
-### - [ ] Stage 9: Write-up, teardown, LinkedIn ($0)
+### - [x] Stage 9: Write-up, teardown, LinkedIn ($0.01 for one Cost Explorer query, done 2026-11-25)
+
+**Done.**
+- **README:** completed, with every prediction scored. Four missed, one held trivially, and the
+  rest held.
+- **Practice 05:** the README carries a visible correction about grounding determinism.
+- **Billed cost:** ~$0.17 account-wide, from Cost Explorer, which lags 24–48 hours.
+- **Teardown:** the evaluation-job bucket and its role were deleted. The table, the gate, its role,
+  the disabled rule and the topic are kept for Practices 08–11. The check included logs.
+- **LinkedIn:** `linkedin-post-draft-2.md` is written.
 
 - **`README.md`:** the stage-by-stage write-up. Score each prediction as it landed, and keep any
   corrections visible.
