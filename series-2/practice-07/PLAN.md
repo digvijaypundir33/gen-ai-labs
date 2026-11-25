@@ -379,7 +379,26 @@ drafts.
 - **The question:** does checking claims one by one catch anything the single managed score
   misses, and is it worth the extra calls?
 
-### - [ ] Stage 7: Store results ($0 idle)
+### - [x] Stage 7: Store results ($0 idle, done 2026-11-25)
+
+**Done.** `store_results.py` loads the committed results from Stages 4–6 into `EvaluationResults`
+(on-demand, SETUP-LOG row 5), with no model calls: **335 rows across 9 runs**. Each run has a
+`#run` record (description, source file, recorded cost). Each item and metric row carries score
+(the mean over n), n, stdev, min, max, scorer and model. Reading a run back with `--show <run_id>`
+returns every row.
+
+Missing scores are kept, not dropped: q03's empty managed Correctness is stored with `n=0`, so the
+"silent empty score" finding stays visible in the data. Writes are idempotent, so rerunning
+overwrites the same keys. 4 offline tests cover keys, the missing-score row and type conversion.
+
+**Bug caught by the duplicate-key test:** the first load printed "wrote 335 rows", but the table
+held **303**. The Stage 4 Q&A output labels each question by its *document*, two questions share
+each of four documents, and DynamoDB silently overwrote the 32 colliding rows. Rows are now keyed
+by the golden `item_id`. The loader refuses to write if any keys collide, prunes keys its files
+no longer produce (48 stale rows removed), and reads the count back, failing on a mismatch. The
+final read-back is 335 rows, matching. (My commit command also let the failing test through,
+because a pipe hid pytest's exit status. It was caught on the next line of output and fixed
+before pushing.)
 
 - Create a DynamoDB table `EvaluationResults` with on-demand billing:
   - partition key `run_id`;
